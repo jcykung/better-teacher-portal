@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Better MyEd",
+  "version": "1.2",
+  "description": "Improves the layout and usability of the BC MyEducation portal.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "*://myeducation.gov.bc.ca/*",
+    "*://*.myeducation.gov.bc.ca/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Better MyEd",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://myeducation.gov.bc.ca/*",
+        "*://*.myeducation.gov.bc.ca/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

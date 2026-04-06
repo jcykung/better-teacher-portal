@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      width: 280px;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+      color: #333;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .header img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 600;
+      color: #2c3e50;
+      letter-spacing: -0.3px;
+    }
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .author-credit {
+      font-size: 10px;
+      color: #95a5a6;
+      margin-top: 2px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #34495e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-icon {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #d1d8e0;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: help;
+      transition: background 0.2s ease;
+    }
+    .info-icon:hover {
+      background: #a5b1c2;
+    }
+    
+    /* Toggle Switch Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #d1d8e0;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    input:checked + .slider {
+      background-color: #27ae60;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .footer {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #95a5a6;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icon128.png" alt="Leaf Logo">
+    <div class="header-text">
+      <h1>Better MyEd</h1>
+      <span class="author-credit">&gt; Jonathan Kung</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">
+      Attendance Trends
+      <span class="info-icon" title="You must be in the 'Trends' view of attendance to see the changes.">i</span>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggleAttendance">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="footer" id="statusMessage">
+    Settings auto-save for future visits.
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
