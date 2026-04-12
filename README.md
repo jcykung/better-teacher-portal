@@ -1,57 +1,47 @@
 # Better MyEd 🍎
 
-**Better MyEd** is a Chrome extension designed to enhance the usability and layout of the British Columbia MyEducation BC (MyEd) portal. It focuses on solving common interface frustrations, such as difficult navigation in large attendance tables and inefficient data views.
+**Better MyEd** is a simple tool for Chrome that makes the MyEducation BC (MyEd) website much easier to use. If you've ever felt frustrated by scrolling through long attendance lists and losing track of which student or date you're looking at, this extension is for you.
 
 ![Better MyEd Icon](icon128.png)
 
-## ✨ Features
+## ✨ How it Helps You
 
-- **Sticky Table Headers & Columns**: Keep student names and dates in view while scrolling through large attendance or grade spreadsheets.
-- **Enhanced Attendance Trends**: Automatically rearranges the "Trends" view to freeze core information, making it easier to track student progress over time.
-- **Seamless Performance**: Runs efficiently in the background and only activates on MyEducation BC domains.
-- **Smart Settings**: Toggle features on or off via the extension popup—your preferences are saved automatically for future sessions.
+- **Keep Student Names in View**: When you scroll sideways or down in large attendance and grade tables, the student names and dates "stick" to the top and side. No more guessing which row belongs to which student!
+- **Better Attendance Trends**: The "Trends" view is automatically cleaned up so you can see student progress clearly without extra clutter.
+- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC.
+- **Simple Controls**: You can easily turn features on or off by clicking the small 🍎 icon in your browser's toolbar.
 
-## 🛠️ How it Works
+## 🚀 How to Install Better MyEd
 
-The extension uses content scripts to intelligently identify tables within the MyEd portal. It applies modern CSS layout techniques (like `position: sticky` and `backdrop-filter`) to "freeze" relevant columns and rows. In the Attendance Trends view, it dynamically reshuffles the DOM elements to provide a more intuitive horizontal scrolling experience.
+Since this is a custom tool, you can add it to your Chrome browser in a few simple steps:
 
-## 🚀 Installation Guide (Unpackaged)
+### 1. Download the Tool
+- Click the green **Code** button at the top of this page.
+- Select **Download ZIP**.
+- Find the downloaded folder on your computer and "unzip" or "extract" it (usually by double-clicking it).
 
-Since this extension is optimized for direct use and development, follow these steps to install it in Google Chrome without using the Chrome Web Store:
+### 2. Open Your Extensions Page
+- Open Google Chrome.
+- In the address bar at the top, type `chrome://extensions/` and press **Enter**.
+- (Or, click the **three dots** in the top right corner > **Extensions** > **Manage Extensions**).
 
-### 1. Download the Code
-- Click the green **Code** button at the top of this repository.
-- Select **Download ZIP** and extract it to a folder on your computer.
-- *Or*, clone the repository using Git:
-  ```bash
-  git clone https://github.com/jcykung/better-myed.git
-  ```
+### 3. Turn on "Developer Mode"
+- In the top-right corner of the Extensions page, look for a switch labeled **Developer mode** and turn it **ON**.
 
-### 2. Open Chrome Extensions
-- Launch Google Chrome.
-- In the address bar, type `chrome://extensions/` and press **Enter**.
-- Alternatively, click the **three dots** (Menu) > **Extensions** > **Manage Extensions**.
+### 4. Add the Extension
+- A button labeled **Load unpacked** will appear in the top-left.
+- Click **Load unpacked**.
+- Select the folder you just downloaded and unzipped in Step 1.
 
-### 3. Enable Developer Mode
-- In the top-right corner of the Extensions page, find the **Developer mode** toggle and turn it **ON**.
+### 5. Pin it for Easy Access
+- Click the **Puzzle Piece icon** in your Chrome toolbar (top right).
+- Find **Better MyEd** and click the **Pin icon** 📌 next to it.
+- Now you'll see the 🍎 icon whenever you need it!
 
-### 4. Load the Extension
-- A new button labeled **Load unpacked** will appear in the top-left.
-- Click **Load unpacked** and select the folder where you extracted/cloned the code (the folder containing `manifest.json`).
+## ⚙️ Settings
 
-### 5. Start Using Better MyEd
-- The extension is now active! 
-- Navigate to the [MyEducation BC portal](https://myeducation.gov.bc.ca/aspen/logon.do).
-- Click the **Extensions puzzle icon** in your Chrome toolbar and pin **Better MyEd** for quick access.
-
-## ⚙️ Configuration
-
-Open the extension popup by clicking the **Better MyEd** icon in your toolbar. You can toggle specific improvements (like Attendance Trends optimization) directly from there.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Click the 🍎 icon in your toolbar to open a small menu. From there, you can toggle specific features like the "Attendance Trends" improvements on or off. Your choices are saved automatically.
 
 ---
 
-*Made with ❤️ by [Jonathan Kung](https://github.com/jcykung)*
+*Created to help BC teachers work more efficiently.*
