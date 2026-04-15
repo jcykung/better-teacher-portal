@@ -83,6 +83,58 @@ function runBookmarklet() {
     totalsTD.classList.add('myed-freeze-2');
     middleTD.classList.add('myed-scroll');
   }, 200);
+
+  /* ===== PART 3: reorder columns → Class Attendance | Code | Name ===== */
+  let codeTries = 0;
+  const CODE_MAX = 25;
+  const codeWait = setInterval(() => {
+    codeTries++;
+    const tables = document.querySelectorAll('table');
+    let found = false;
+
+    tables.forEach(table => {
+      if (found) return;
+      const firstRow = table.rows[0];
+      if (!firstRow) return;
+
+      let codeIdx = -1;
+      let nameIdx = -1;
+      let classAttIdx = -1;
+
+      [...firstRow.cells].forEach((cell, i) => {
+        const text = cell.textContent.trim();
+        if (text === 'Code') codeIdx = i;
+        if (text === 'Name') nameIdx = i;
+        if (text === 'Class Attendance') classAttIdx = i;
+      });
+
+      // Only act when Code is to the right of Name
+      if (codeIdx > nameIdx && nameIdx >= 0) {
+        found = true;
+        clearInterval(codeWait);
+        const maxIdx = Math.max(codeIdx, classAttIdx);
+
+        [...table.rows].forEach(row => {
+          if (row.cells.length <= maxIdx) return;
+
+          // Grab references before any DOM moves
+          const nameCell = row.cells[nameIdx];
+          const codeCell = row.cells[codeIdx];
+          const classAttCell = classAttIdx >= 0 ? row.cells[classAttIdx] : null;
+
+          // 1. Move Code before Name
+          nameCell.parentElement.insertBefore(codeCell, nameCell);
+
+          // 2. Move Class Attendance before Code
+          if (classAttCell) {
+            codeCell.parentElement.insertBefore(classAttCell, codeCell);
+          }
+        });
+      }
+    });
+
+    if (codeTries > CODE_MAX && !found) clearInterval(codeWait);
+  }, 200);
 }
 
 // Check initial state from storage to auto-inject if it was previously left ON
