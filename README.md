@@ -1,47 +1,31 @@
-# Better MyEd 🍎
+# Better MyEd ![Better MyEd Icon](icon48.png)
 
-**Better MyEd** is a simple tool for Chrome that makes the MyEducation BC (MyEd) website much easier to use. If you've ever felt frustrated by scrolling through long attendance lists and losing track of which student or date you're looking at, this extension is for you.
-
-![Better MyEd Icon](icon128.png)
-
-## ✨ How it Helps You
-
-- **Keep Student Names in View**: When you scroll sideways or down in large attendance and grade tables, the student names and dates "stick" to the top and side. No more guessing which row belongs to which student!
-- **Better Attendance Trends**: The "Trends" view is automatically cleaned up so you can see student progress clearly without extra clutter.
-- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC.
-- **Simple Controls**: You can easily turn features on or off by clicking the small 🍎 icon in your browser's toolbar.
-
-## 🚀 How to Install Better MyEd
-
-Since this is a custom tool, you can add it to your Chrome browser in a few simple steps:
-
-### 1. Download the Tool
-- Click the green **Code** button at the top of this page.
-- Select **Download ZIP**.
-- Find the downloaded folder on your computer and "unzip" or "extract" it (usually by double-clicking it).
-
-### 2. Open Your Extensions Page
-- Open Google Chrome.
-- In the address bar at the top, type `chrome://extensions/` and press **Enter**.
-- (Or, click the **three dots** in the top right corner > **Extensions** > **Manage Extensions**).
-
-### 3. Turn on "Developer Mode"
-- In the top-right corner of the Extensions page, look for a switch labeled **Developer mode** and turn it **ON**.
-
-### 4. Add the Extension
-- A button labeled **Load unpacked** will appear in the top-left.
-- Click **Load unpacked**.
-- Select the folder you just downloaded and unzipped in Step 1.
-
-### 5. Pin it for Easy Access
-- Click the **Puzzle Piece icon** in your Chrome toolbar (top right).
-- Find **Better MyEd** and click the **Pin icon** 📌 next to it.
-- Now you'll see the 🍎 icon whenever you need it!
-
-## ⚙️ Settings
-
-Click the 🍎 icon in your toolbar to open a small menu. From there, you can toggle specific features like the "Attendance Trends" improvements on or off. Your choices are saved automatically.
+**Better MyEd** is a simple Chrome Extension that makes the MyEducation BC (MyEd) website much easier to use. If you've ever felt frustrated by scrolling through long attendance lists and losing track of which student or date you're looking at, this extension is for you. I made this because I was annoyed by the layout in MyEd while taking attendance as well as the fact that attendance totals in the "Trends" view was difficult to find.
 
 ---
 
-*Created to help BC teachers work more efficiently.*
+## ✨ How it Helps You
+
+- **Buttons Next to Names**: Buttons are more easily accessible because they have been moved next to student names.
+- **Better Attendance Trends**: The "Trends" view features attendance totals (total lates and absences for the term) in a column next to student names.
+- **Closer Columns**: Attendance columns are now closer together, making it easier to read across each row.
+- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC. Settings are saved in your browser.
+- **Simple Controls**: You can easily turn features on or off by clicking the small 🍎 icon in your browser's toolbar.
+
+---
+
+## ☕ Support
+
+If you find this useful, consider buying me a coffee!
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20this%20project-F92672?style=for-the-badge&logo=ko-fi)](https://ko-fi.com/coolpuddytat)
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and distribute. Attribution appreciated but not required.
+
+---
+
+_Built with ❤️ by [Jonathan Kung](https://ko-fi.com/coolpuddytat)_
