@@ -148,29 +148,9 @@ function runBookmarklet() {
   }, 200);
 }
 
-// Check initial state from storage to auto-inject if it was previously left ON
-chrome.storage.sync.get(['showAttendance'], (result) => {
-  if (result.showAttendance) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runBookmarklet);
-    } else {
-      runBookmarklet();
-    }
-  }
-});
-
-// Listen for messages from the popup toggle switch
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "toggleAttendance") {
-    if (request.state) {
-      // Toggle ON: Inject exactly like the bookmarklet
-      runBookmarklet();
-      sendResponse({status: "applied"});
-    } else {
-      // Toggle OFF: Just refresh the page
-      window.location.reload();
-      sendResponse({status: "removed"});
-    }
-  }
-  return true;
-});
+// Automatically run on injection
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runBookmarklet);
+} else {
+  runBookmarklet();
+}
