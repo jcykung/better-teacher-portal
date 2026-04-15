@@ -134,6 +134,29 @@
       color: #95a5a6;
       text-align: center;
     }
+    .tip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: #ff5e5b;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+      white-space: nowrap;
+    }
+    .tip-btn:hover {
+      background: #e04e4b;
+      transform: translateY(-1px);
+    }
+    .tip-btn svg {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -143,6 +166,12 @@
       <h1>Better MyEd</h1>
       <span class="author-credit">&gt; Jonathan Kung</span>
     </div>
+    <button class="tip-btn" id="tipBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>
+      </svg>
+      Tip Me
+    </button>
   </div>
   <div class="card">
     <div class="label">

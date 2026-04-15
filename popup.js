@@ -1,6 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('toggleAttendance');
   const statusEl = document.getElementById('statusMessage');
+  const tipBtn = document.getElementById('tipBtn');
+
+  // Open Ko-Fi in a new tab
+  tipBtn.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://ko-fi.com/coolpuddytat' });
+  });
 
   // Load the saved state from storage
   chrome.storage.sync.get(['showAttendance'], (result) => {
