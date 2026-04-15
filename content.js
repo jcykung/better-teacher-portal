@@ -114,6 +114,10 @@ function runBookmarklet() {
         clearInterval(codeWait);
         const maxIdx = Math.max(codeIdx, classAttIdx);
 
+        // Stop the table from stretching to fill the page
+        table.style.width = 'auto';
+        table.style.tableLayout = 'auto';
+
         [...table.rows].forEach(row => {
           if (row.cells.length <= maxIdx) return;
 
@@ -129,6 +133,13 @@ function runBookmarklet() {
           if (classAttCell) {
             codeCell.parentElement.insertBefore(classAttCell, codeCell);
           }
+
+          // 3. Compact every cell in the row
+          [...row.cells].forEach(cell => {
+            cell.style.width = 'auto';
+            cell.style.whiteSpace = 'nowrap';
+            cell.style.padding = '0 10px';
+          });
         });
       }
     });
