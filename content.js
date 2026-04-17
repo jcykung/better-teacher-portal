@@ -169,11 +169,11 @@ function runBookmarklet() {
           const classAttCell = classAttIdx >= 0 ? row.cells[classAttIdx] : null;
 
           // 1. Move Code before Name
-          nameCell.parentElement.insertBefore(codeCell, nameCell);
+          nameCell.parentElement.insertBefore(codeCell, nameCell.nextSibling);
 
           // 2. Move Class Attendance before Code
           if (classAttCell) {
-            codeCell.parentElement.insertBefore(classAttCell, codeCell);
+            codeCell.parentElement.insertBefore(classAttCell, codeCell.nextSibling);
           }
 
           // 3. Compact every cell in the row
