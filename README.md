@@ -1,16 +1,17 @@
 # Better MyEd ![Better MyEd Icon](icon48.png)
 
-**Better MyEd** is a simple Chrome Extension that makes the MyEducation BC (MyEd) website much easier to use. If you've ever felt frustrated by scrolling through long attendance lists and losing track of which student or date you're looking at, this extension is for you. I made this because I was annoyed by the layout in MyEd while taking attendance as well as the fact that attendance totals in the "Trends" view was difficult to find.
+**Better MyEd** is a simple Chrome Extension that makes the MyEducation BC (MyEd) website much easier to use.
 
 ---
 
 ## ✨ How it Helps You
 
-- **Buttons Next to Names**: Buttons are more easily accessible because they have been moved next to student names.
-- **Better Attendance Trends**: The "Trends" view features attendance totals (total lates and absences for the term) in a column next to student names.
-- **Closer Columns**: Attendance columns are now closer together, making it easier to read across each row.
-- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC. Settings are saved in your browser.
-- **Simple Controls**: You can easily turn features on or off by clicking the small 🍎 icon in your browser's toolbar.
+- **Highlighted Student Names**: Roster lists bold students' first names and move attendance buttons next to names for easy access.
+- **Frozen Layouts in Trends**: In Trends, attendance totals now appear next to student names and these columns are frozen to allow for scrolling without losing sight of these fields.
+- **Closer Columns**: Column widths have been reduced to make it easier to read data across rows.
+- **Better Celebrate**: A fun, optional toggle that triggers a burst of confetti whenever you successfully click "Post" or "Post Grades..." — because checking off administrative chores deserves a small victory!
+- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC. Settings auto-save in your browser.
+- **Simple Controls**: You can easily turn features on or off at any time using the controls from the extension icon.
 
 ---
 
