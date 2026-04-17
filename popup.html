@@ -58,6 +58,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 12px;
         transition:
           transform 0.2s ease,
           box-shadow 0.2s ease;
@@ -197,7 +198,7 @@
         Better Attendance
         <span
           class="info-icon"
-          title="Shows attendance buttons next to name and attendance totals in Trends."
+          title="Shows attendance buttons and first names more prominently and next to each other. In 'Trends', shows attendance totals next to student names."
         ></span>
       </div>
       <label class="switch">
@@ -205,11 +206,34 @@
         <span class="slider"></span>
       </label>
     </div>
+    <div class="card">
+      <div class="label">
+        Better Celebrate
+        <span
+          class="info-icon"
+          title="Generates a burst of confetti when you submit Attendance or Marks - celebrate the small victories!"
+        ></span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="toggleCelebration" />
+        <span class="slider"></span>
+      </label>
+    </div>
     <div class="footer" id="statusMessage">
       Settings auto-save for future visits.
     </div>
-    <div style="font-size: 10px; color: #95a5a6; margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; text-align: center;">
-      Chrome may ask for "Read Data" permission. This is ONLY used to reformat the table layout.
+    <div
+      style="
+        font-size: 10px;
+        color: #95a5a6;
+        margin-top: 10px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding-top: 8px;
+        text-align: center;
+      "
+    >
+      Chrome may ask for "Read Data" permission. This is ONLY used to reformat
+      the table layout.
     </div>
     <script src="popup.js"></script>
   </body>
