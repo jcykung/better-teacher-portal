@@ -1,5 +1,24 @@
 function runBookmarklet() {
-  /* ===== PART 1: run immediately ===== */
+  /** 
+   * ===== PART 1: GLOBAL FIXES =====
+   * These run immediately across all tables on the page.
+   * 1. Injects global hover states for data rows
+   * 2. Adds horizontal scrolling for wide tables
+   * 3. Makes the first column (usually Names) sticky so it stays visible while scrolling
+   */
+  // 1. Inject custom CSS styles globally. We check if it exists so we don't accidentally add it twice.
+  // Feel free to change the RGBA values below to customize the hover color!
+  if(!document.getElementById('myed-global-hover')){
+    const hoverStyle = document.createElement('style');
+    hoverStyle.id = 'myed-global-hover';
+    hoverStyle.textContent = `
+      table tbody tr.listCell:hover td, table tbody tr.listCellAlt:hover td {
+        background-color: rgba(200, 200, 200, 0.3) !important;
+      }
+    `;
+    document.head.appendChild(hoverStyle);
+  }
+
   document.querySelectorAll('div,table').forEach(c=>{
     if(c.scrollWidth > c.clientWidth){
       c.style.overflowX = 'auto';
@@ -7,10 +26,13 @@ function runBookmarklet() {
     }
   });
 
+  // 3. Make the first column on EVERY table "sticky" (it stays visible when scrolling right)
   document.querySelectorAll('table').forEach(t=>{
     const rows = t.rows;
     if(!rows.length) return;
-    // separated into read and write phases to prevent layout thrashing
+    
+    // We separate reading styles and writing styles. Doing these at the same time causes 
+    // "layout thrashing" and makes the browser laggy.
     const cellStyles = [];
     for(let r=0; r<rows.length; r++){
       const cell = rows[r].cells[0];
@@ -37,11 +59,16 @@ function runBookmarklet() {
     }
   });
 
-  /* ===== PART 2: wait for Aspen, then run ===== */
+  /**
+   * ===== PART 2: THE "TRENDS" PAGE (TOTALS COLUMN REORDER & FREEZING) =====
+   * This part specifically looks for the Aspen "Trends/Totals" screen.
+   * It moves the Totals column next to the Names, and makes both sticky.
+   */
   let tries = 0;
-  const MAX = 25;
+  const MAX = 25; // We will check 25 times (for 5 seconds) before giving up.
   const wait = setInterval(()=>{
     tries++;
+    // #div3 usually contains the totals data on MyEd Trends view
     const totalsDiv = document.querySelector('#div3');
     if(!totalsDiv){
       if(tries > MAX) clearInterval(wait);
@@ -115,20 +142,35 @@ function runBookmarklet() {
     updateStickyColumns();
     middleTD.classList.add('myed-scroll');
 
-    // Watch for dynamic insertions like the "Class Code" column popping up
-    // Removed attributes and subtree tracking to prevent infinite loops causing lag
+    // 4. Watch for dynamic content loading in (like new columns popping up late)
+    // We only track direct children (childList) to prevent infinite loops causing lag
     const observer = new MutationObserver(updateStickyColumns);
     observer.observe(row, { childList: true });
     
+    // OPTIMIZATION: Track observer instances to prevent memory leaks if script runs multiple times
+    if (window._myedObserver) window._myedObserver.disconnect();
+    window._myedObserver = observer;
+    
     if (window.ResizeObserver) {
-      new ResizeObserver(updateStickyColumns).observe(row);
+      const resizeOb = new ResizeObserver(updateStickyColumns);
+      resizeOb.observe(row);
+      // Clean up previous instances
+      if (window._myedResizeOb) window._myedResizeOb.disconnect();
+      window._myedResizeOb = resizeOb;
     }
     
   }, 200);
 
-  /* ===== PART 3: reorder columns → Class Attendance | Code | Name ===== */
+  /**
+   * ===== PART 3: THE "ROSTER/ATTENDANCE" PAGE =====
+   * This logic automatically moves formatting around for general rosters:
+   * 1. Moves Class Code closer to names
+   * 2. Moves Class Attendance directly beside names
+   * 3. Formats names nicely
+   * 4. Adds custom colorful badges for "A" (Absent) and "L" (Late)
+   */
   let codeTries = 0;
-  const CODE_MAX = 25;
+  const CODE_MAX = 25; // Wait max 5 seconds again
   const codeWait = setInterval(() => {
     codeTries++;
     const tables = document.querySelectorAll('table');
@@ -198,6 +240,51 @@ function runBookmarklet() {
                 nameTarget.innerHTML = `${lastName}, <strong>${firstName}</strong>`;
               }
             }
+            
+            // 5. Style Attendance Badges
+            if (classAttCell) {
+              const input = classAttCell.querySelector('input[type="text"]');
+              if (input) {
+                const val = input.value.trim().toUpperCase();
+                if (val === 'L' || val === 'A') {
+                  input.style.backgroundColor = val === 'L' ? '#ffd866' : '#ff6188';
+                  input.style.color = val === 'L' ? '#d25a00' : '#7c1a3b';
+                  input.style.fontWeight = 'bold';
+                  input.style.textAlign = 'center';
+                  input.style.borderRadius = '4px';
+                }
+              } else {
+                // Find pure text nodes to avoid destroying sibling elements like [edit] links
+                const walker = document.createTreeWalker(classAttCell, NodeFilter.SHOW_TEXT, null, false);
+                const nodesToReplace = [];
+                let textNode;
+                while ((textNode = walker.nextNode())) {
+                  const val = textNode.nodeValue.trim().toUpperCase();
+                  if (val === 'L' || val === 'A') {
+                    nodesToReplace.push({ node: textNode, val });
+                  }
+                }
+                
+                nodesToReplace.forEach(({ node, val }) => {
+                  const badgeColor = val === 'L' ? '#ffd866' : '#ff6188';
+                  const textColor = val === 'L' ? '#d25a00' : '#7c1a3b';
+                  const span = document.createElement('span');
+                  span.style.display = 'inline-flex';
+                  span.style.alignItems = 'center';
+                  span.style.justifyContent = 'center';
+                  span.style.width = '22px';
+                  span.style.height = '22px';
+                  span.style.borderRadius = '4px';
+                  span.style.backgroundColor = badgeColor;
+                  span.style.color = textColor;
+                  span.style.fontWeight = 'bold';
+                  span.style.fontSize = '13px';
+                  span.style.marginRight = '6px';
+                  span.textContent = val;
+                  node.parentNode.replaceChild(span, node);
+                });
+              }
+            }
           }
         });
       }
@@ -207,7 +294,11 @@ function runBookmarklet() {
   }, 200);
 }
 
-// Initialize script features based on user settings
+/**
+ * ===== INITIALIZATION SCRIPTS =====
+ * Setup based on the Chrome Extension toggle switches in the popup.
+ */
+// Ensure script features don't get accidentally duplicated
 if (!window.betterMyEdLoaded) {
   window.betterMyEdLoaded = true;
 
@@ -223,8 +314,11 @@ if (!window.betterMyEdLoaded) {
     }
 
     if (result.celebrationMode) {
+      // Create a single global event listener. Reusing one listener instead of attaching 
+      // to every button saves massive amounts of browser memory!
       document.addEventListener('click', (e) => {
         let target = e.target;
+        // Bubble up from the click target to find the actual button/link element
         while (target && target !== document) {
           if ((target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'SPAN') && target.textContent) {
             const text = target.textContent.trim();
