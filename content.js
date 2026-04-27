@@ -356,6 +356,9 @@ function runBookmarklet() {
       }
     }
 
+    // Expose so other parts of the script can update the badge
+    window._myedApplyPostedState = applyPostedState;
+
     // Set initial state from the page's own status element
     applyPostedState(alreadyPosted);
 
@@ -366,6 +369,18 @@ function runBookmarklet() {
     saveBtn.addEventListener('click', () => {
       applyPostedState(true);
     });
+
+    // Flip badge to "Not Posted" when any attendance input is clicked
+    // Uses event delegation so it works even for dynamically-loaded inputs
+    const area = document.getElementById('contentArea');
+    if (area) {
+      area.addEventListener('click', (e) => {
+        const input = e.target.closest('input');
+        if (input && input !== saveBtn) {
+          applyPostedState(false);
+        }
+      });
+    }
   }, 200);
 
   /**
