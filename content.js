@@ -367,6 +367,43 @@ function runBookmarklet() {
       applyPostedState(true);
     });
   }, 200);
+
+  /**
+   * ===== PART 5: KEEP ATTENDANCE INPUTS ENABLED =====
+   * After posting, MyEd disables the A/L/P attendance code inputs.
+   * This observer watches for the "disabled" attribute being added to any
+   * input inside the content area and immediately removes it, so teachers
+   * can still switch between A, L, and P without extra clicks.
+   */
+  const contentArea = document.getElementById('contentArea');
+  if (contentArea) {
+    // Initial sweep: re-enable any inputs that arrived already disabled from the server
+    contentArea.querySelectorAll('input[disabled]').forEach(input => {
+      input.disabled = false;
+      input.removeAttribute('disabled');
+    });
+
+    const disableObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'disabled') {
+          const el = mutation.target;
+          if (el.tagName === 'INPUT' && el.disabled) {
+            el.disabled = false;
+            el.removeAttribute('disabled');
+          }
+        }
+      }
+    });
+    disableObserver.observe(contentArea, {
+      subtree:         true,
+      attributes:      true,
+      attributeFilter: ['disabled'],
+    });
+
+    // Clean up previous instance to prevent memory leaks
+    if (window._myedDisableObserver) window._myedDisableObserver.disconnect();
+    window._myedDisableObserver = disableObserver;
+  }
 }
 
 /**
