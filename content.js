@@ -300,12 +300,12 @@ function runBookmarklet() {
 
     if (codeTries > CODE_MAX && !found) clearInterval(codeWait);
   }, 200);
-}
 
   /**
    * ===== PART 4: POST STATUS INDICATOR =====
    * Adds a visual "Not Posted" / "Posted" badge next to the Post (saveButton) button.
-   * The badge starts as red "Not Posted" and turns green "Posted" when clicked.
+   * Detects existing post status by checking for "Posted" text in the page's
+   * status cell (via XPath). Toggles to green "Posted" when the button is clicked.
    */
   let postTries = 0;
   const POST_MAX = 25;
@@ -321,9 +321,13 @@ function runBookmarklet() {
     // Don't add the badge twice
     if (document.getElementById('myed-post-status')) return;
 
+    // Check the page's own status cell to see if attendance was already posted
+    const statusXPath = '//*[@id="contentArea"]/table[2]/tbody/tr[1]/td[2]/table[2]/tbody/tr[2]/td[2]';
+    const statusNode = document.evaluate(statusXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const alreadyPosted = statusNode ? /posted/i.test(statusNode.textContent) : false;
+
     const badge = document.createElement('span');
     badge.id = 'myed-post-status';
-    badge.textContent = 'Not Posted';
     Object.assign(badge.style, {
       display:        'inline-flex',
       alignItems:     'center',
@@ -333,24 +337,34 @@ function runBookmarklet() {
       fontSize:       '12px',
       fontWeight:     '600',
       letterSpacing:  '0.3px',
-      backgroundColor: '#fde8e8',
-      color:          '#b91c1c',
-      border:         '1px solid #f5c6c6',
       transition:     'all 0.3s ease',
       verticalAlign:  'middle',
     });
+
+    // Helper to apply the correct visual state
+    function applyPostedState(posted) {
+      if (posted) {
+        badge.textContent = 'Posted';
+        badge.style.backgroundColor = '#dcfce7';
+        badge.style.color           = '#166534';
+        badge.style.border          = '1px solid #bbf7d0';
+      } else {
+        badge.textContent = 'Not Posted';
+        badge.style.backgroundColor = '#fde8e8';
+        badge.style.color           = '#b91c1c';
+        badge.style.border          = '1px solid #f5c6c6';
+      }
+    }
+
+    // Set initial state from the page's own status element
+    applyPostedState(alreadyPosted);
 
     // Place the badge right after the button
     saveBtn.parentElement.insertBefore(badge, saveBtn.nextSibling);
 
     // Toggle to "Posted" on click
     saveBtn.addEventListener('click', () => {
-      badge.textContent = 'Posted';
-      Object.assign(badge.style, {
-        backgroundColor: '#dcfce7',
-        color:          '#166534',
-        border:         '1px solid #bbf7d0',
-      });
+      applyPostedState(true);
     });
   }, 200);
 }
