@@ -12,8 +12,16 @@ function runBookmarklet() {
     const hoverStyle = document.createElement('style');
     hoverStyle.id = 'myed-global-hover';
     hoverStyle.textContent = `
-      table tbody tr.listCell:hover td, table tbody tr.listCellAlt:hover td {
-        background-color: rgba(200, 200, 200, 0.3) !important;
+      table tbody tr.listCell td, table tbody tr.listCellAlt td {
+        position: relative;
+      }
+      table tbody tr.listCell:hover td::after, table tbody tr.listCellAlt:hover td::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: rgba(200, 200, 200, 0.3);
+        pointer-events: none;
+        z-index: 1;
       }
     `;
     document.head.appendChild(hoverStyle);
@@ -291,6 +299,59 @@ function runBookmarklet() {
     });
 
     if (codeTries > CODE_MAX && !found) clearInterval(codeWait);
+  }, 200);
+}
+
+  /**
+   * ===== PART 4: POST STATUS INDICATOR =====
+   * Adds a visual "Not Posted" / "Posted" badge next to the Post (saveButton) button.
+   * The badge starts as red "Not Posted" and turns green "Posted" when clicked.
+   */
+  let postTries = 0;
+  const POST_MAX = 25;
+  const postWait = setInterval(() => {
+    postTries++;
+    const saveBtn = document.querySelector('button[name="saveButton"]');
+    if (!saveBtn) {
+      if (postTries > POST_MAX) clearInterval(postWait);
+      return;
+    }
+    clearInterval(postWait);
+
+    // Don't add the badge twice
+    if (document.getElementById('myed-post-status')) return;
+
+    const badge = document.createElement('span');
+    badge.id = 'myed-post-status';
+    badge.textContent = 'Not Posted';
+    Object.assign(badge.style, {
+      display:        'inline-flex',
+      alignItems:     'center',
+      marginLeft:     '10px',
+      padding:        '3px 10px',
+      borderRadius:   '4px',
+      fontSize:       '12px',
+      fontWeight:     '600',
+      letterSpacing:  '0.3px',
+      backgroundColor: '#fde8e8',
+      color:          '#b91c1c',
+      border:         '1px solid #f5c6c6',
+      transition:     'all 0.3s ease',
+      verticalAlign:  'middle',
+    });
+
+    // Place the badge right after the button
+    saveBtn.parentElement.insertBefore(badge, saveBtn.nextSibling);
+
+    // Toggle to "Posted" on click
+    saveBtn.addEventListener('click', () => {
+      badge.textContent = 'Posted';
+      Object.assign(badge.style, {
+        backgroundColor: '#dcfce7',
+        color:          '#166534',
+        border:         '1px solid #bbf7d0',
+      });
+    });
   }, 200);
 }
 

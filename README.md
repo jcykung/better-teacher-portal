@@ -4,11 +4,15 @@
 
 ---
 
+
+
+---
+
 ## ✨ How it Helps You
 
 - **Easy Button Access**: Attendance buttons are moved next to names for easier access.
 - **Highlighted Student Names**: Roster lists bold students' first names
-- **Attendance Status Badges**: Identifies "Absent" (A) or "Late" (L) markings at a glance with high-visibility, color-coded badges in the Class Attendance column.
+- **Attendance Status Badges**: Identifies "Absent" (A) or "Late" (L) markings at a glance with high-visibility, colour-coded badges in the Class Attendance column.
 - **Row Highlighting**: Adds a subtle row-highlight effect when hovering over data rows to make reading long lines of information easier.
 - **Closer Columns**: Column widths have been reduced to make it easier to read data across rows.
 - **Frozen Layouts in Trends**: In Trends, attendance totals now appear next to student names and these columns are frozen to allow for scrolling without losing sight of these fields.
