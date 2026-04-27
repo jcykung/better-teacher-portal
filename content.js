@@ -311,7 +311,16 @@ function runBookmarklet() {
   const POST_MAX = 25;
   const postWait = setInterval(() => {
     postTries++;
-    const saveBtn = document.querySelector('button[name="saveButton"]');
+
+    // Only show the badge on the attendance page — identified by this status element
+    const statusXPath = '//*[@id="contentArea"]/table[2]/tbody/tr[1]/td[2]/table[2]/tbody/tr[2]/td[2]';
+    const statusNode = document.evaluate(statusXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    if (!statusNode) {
+      if (postTries > POST_MAX) clearInterval(postWait);
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveButton');
     if (!saveBtn) {
       if (postTries > POST_MAX) clearInterval(postWait);
       return;
@@ -321,10 +330,8 @@ function runBookmarklet() {
     // Don't add the badge twice
     if (document.getElementById('myed-post-status')) return;
 
-    // Check the page's own status cell to see if attendance was already posted
-    const statusXPath = '//*[@id="contentArea"]/table[2]/tbody/tr[1]/td[2]/table[2]/tbody/tr[2]/td[2]';
-    const statusNode = document.evaluate(statusXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    const alreadyPosted = statusNode ? /posted/i.test(statusNode.textContent) : false;
+    // Check if attendance was already posted
+    const alreadyPosted = /posted/i.test(statusNode.textContent);
 
     const badge = document.createElement('span');
     badge.id = 'myed-post-status';
