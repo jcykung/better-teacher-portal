@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggleAttendance = document.getElementById('toggleAttendance');
   const toggleCelebration = document.getElementById('toggleCelebration');
+  const toggleGrades = document.getElementById('toggleGrades');
   const statusEl = document.getElementById('statusMessage');
   const tipBtn = document.getElementById('tipBtn');
 
@@ -12,9 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Load the saved states from storage
-  chrome.storage.sync.get(['showAttendance', 'celebrationMode'], (result) => {
+  chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], (result) => {
     toggleAttendance.checked = result.showAttendance || false;
     toggleCelebration.checked = result.celebrationMode || false;
+    toggleGrades.checked = result.betterGrades || false;
   });
 
   async function registerScript() {
@@ -55,13 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleToggleChange() {
     const showAttendance = toggleAttendance.checked;
     const celebrationMode = toggleCelebration.checked;
+    const betterGrades = toggleGrades.checked;
     
-    if (showAttendance || celebrationMode) {
+    if (showAttendance || celebrationMode || betterGrades) {
       // Request specific host permission
       chrome.permissions.request({ origins: [MYED_PATTERN] }, async (granted) => {
         if (granted) {
           await registerScript();
-          chrome.storage.sync.set({ showAttendance, celebrationMode });
+          chrome.storage.sync.set({ showAttendance, celebrationMode, betterGrades });
 
           // Try to inject immediately into the current tab
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -83,17 +86,18 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } else {
           // User cancelled the permission dialog
-          chrome.storage.sync.get(['showAttendance', 'celebrationMode'], (result) => {
+          chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], (result) => {
             toggleAttendance.checked = result.showAttendance || false;
             toggleCelebration.checked = result.celebrationMode || false;
+            toggleGrades.checked = result.betterGrades || false;
           });
           statusEl.style.color = '#e74c3c';
           statusEl.innerText = "Permission needed.";
         }
       });
     } else {
-      // Both are OFF
-      chrome.storage.sync.set({ showAttendance: false, celebrationMode: false }, async () => {
+      // All are OFF
+      chrome.storage.sync.set({ showAttendance: false, celebrationMode: false, betterGrades: false }, async () => {
         await unregisterScript();
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs.length > 0 && (tabs[0].url || '').includes('myeducation.gov.bc.ca')) {
@@ -108,4 +112,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   toggleAttendance.addEventListener('change', handleToggleChange);
   toggleCelebration.addEventListener('change', handleToggleChange);
+  toggleGrades.addEventListener('change', handleToggleChange);
 });
