@@ -1,4 +1,9 @@
 function runBookmarklet() {
+  // Do not run on specific popups where layout is easily broken
+  if (window.location.href.includes('studentMassEmail.do')) {
+    return;
+  }
+
   /** 
    * ===== PART 1: GLOBAL FIXES =====
    * These run immediately across all tables on the page.
@@ -36,6 +41,9 @@ function runBookmarklet() {
 
   // 3. Make the first column on EVERY table "sticky" (it stays visible when scrolling right)
   document.querySelectorAll('table').forEach(t=>{
+    // Only apply sticky columns to actual data lists, not layout tables
+    if(!t.querySelector('tr.listCell, tr.listCellAlt')) return;
+    
     const rows = t.rows;
     if(!rows.length) return;
     
@@ -72,9 +80,14 @@ function runBookmarklet() {
    * This part specifically looks for the Aspen "Trends/Totals" screen.
    * It moves the Totals column next to the Names, and makes both sticky.
    */
-  let tries = 0;
-  const MAX = 25; // We will check 25 times (for 5 seconds) before giving up.
-  const wait = setInterval(()=>{
+  const urlStr = window.location.href || '';
+  const isTrendsPage = urlStr.includes('attendance.period.classes.trends') || 
+                       urlStr.includes('periodTrendsClassroomInput.do');
+
+  if (isTrendsPage) {
+    let tries = 0;
+    const MAX = 25; // We will check 25 times (for 5 seconds) before giving up.
+    const wait = setInterval(()=>{
     tries++;
     // #div3 usually contains the totals data on MyEd Trends view
     const totalsDiv = document.querySelector('#div3');
@@ -168,6 +181,7 @@ function runBookmarklet() {
     }
     
   }, 200);
+  }
 
   /**
    * ===== PART 3: THE "ROSTER/ATTENDANCE" PAGE =====
