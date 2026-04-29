@@ -27,16 +27,8 @@ function runBookmarklet() {
     const hoverStyle = document.createElement('style');
     hoverStyle.id = 'myed-global-hover';
     hoverStyle.textContent = `
-      table tbody tr.listCell td, table tbody tr.listCellAlt td {
-        position: relative;
-      }
-      table tbody tr.listCell:hover td::after, table tbody tr.listCellAlt:hover td::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: rgba(200, 200, 200, 0.3);
-        pointer-events: none;
-        z-index: 1;
+      table tbody tr.listCell:hover td, table tbody tr.listCellAlt:hover td {
+        box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
       }
     `;
     document.head.appendChild(hoverStyle);
@@ -133,7 +125,15 @@ function runBookmarklet() {
         .myed-freeze {
           position: sticky !important;
           z-index: 10 !important;
-          background-clip: padding-box;
+          background-clip: border-box !important;
+        }
+        #div3 {
+          /* Apply the border to the internal div to ensure it stays pinned to the totals section */
+          border-right: 1.5px solid #000 !important;
+          box-sizing: border-box;
+        }
+        tr.myed-row-hover #myed-totals-column {
+          box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
         }
         /* ensure children of frozen columns also have solid background if body is transparent */
         .myed-freeze > * {
@@ -142,11 +142,33 @@ function runBookmarklet() {
         .myed-scroll {
           overflow-x: auto;
         }
+        /* Unified row highlighting for Trends */
+        tr.myed-row-hover td {
+          box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
+        }
       `;
       document.head.appendChild(style);
     }
     // Move the totals column next to the names column
     row.insertBefore(totalsTD, namesTD.nextSibling);
+    
+    // Force the table to be compact and collapse borders to remove gaps
+    const table = row.closest('table');
+    if (table) {
+      table.style.width = 'auto';
+      table.style.borderCollapse = 'collapse';
+      table.style.borderSpacing = '0';
+    }
+    
+    // Ensure frozen columns are compact and clean
+    namesTD.style.padding = '0';
+    namesTD.style.border = 'none';
+    
+    totalsTD.id = 'myed-totals-column';
+    totalsTD.style.width = '1px';
+    totalsTD.style.whiteSpace = 'nowrap';
+    totalsTD.style.padding = '0';
+    totalsTD.style.border = 'none';
     
     let stickyRaf;
     function updateStickyColumns() {
@@ -170,6 +192,15 @@ function runBookmarklet() {
           if (cell.style.left !== newLeft) {
             cell.style.left = newLeft;
           }
+          
+          // Ensure background is opaque to hide data passing behind
+          let bg = getComputedStyle(cell).backgroundColor;
+          if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
+            bg = '#fff';
+          }
+          cell.style.backgroundColor = bg;
+          cell.style.background = bg; // Force solid background
+          
           currentLeft += width;
         }
       });
@@ -206,6 +237,32 @@ function runBookmarklet() {
       if (window._myedResizeOb) window._myedResizeOb.disconnect();
       window._myedResizeOb = resizeOb;
     }
+    
+    // 5. Synchronized Row Highlighting
+    // Since Names, Totals, and Data are in separate tables, we sync them by rowIndex
+    function syncRowHover(e) {
+      const hoveredRow = e.target.closest('tr');
+      if (!hoveredRow || !hoveredRow.classList.contains('listCell') && !hoveredRow.classList.contains('listCellAlt')) return;
+      
+      const idx = hoveredRow.rowIndex;
+      const isEnter = e.type === 'mouseover' || e.type === 'mouseenter';
+      
+      // Find all tables involved in the Trends view
+      const tables = [namesTD, totalsTD, middleTD].map(td => td.querySelector('table')).filter(Boolean);
+      
+      tables.forEach(t => {
+        const targetRow = t.rows[idx];
+        if (targetRow) {
+          if (isEnter) targetRow.classList.add('myed-row-hover');
+          else targetRow.classList.remove('myed-row-hover');
+        }
+      });
+    }
+
+    [namesTD, totalsTD, middleTD].forEach(container => {
+      container.addEventListener('mouseover', syncRowHover);
+      container.addEventListener('mouseout', syncRowHover);
+    });
     
   }, 200);
   }
