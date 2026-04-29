@@ -577,12 +577,16 @@ function runBetterGrades() {
   // Run once and then poll to handle AJAX-based student switching
   checkAndInject();
   const intervalId = setInterval(() => {
-    if (!isContextValid()) {
+    if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
       clearInterval(intervalId);
       return;
     }
     checkAndInject();
   }, 1000);
+
+  // Store for cleanup
+  if (window._myedGradesInterval) clearInterval(window._myedGradesInterval);
+  window._myedGradesInterval = intervalId;
 }
 
 function injectBetterGradesUI(textArea, stdId) {
@@ -860,9 +864,15 @@ function initBetterMyEd() {
     }
 
     if (result.celebrationMode) {
-      document.addEventListener('click', (e) => {
-        if (!isContextValid()) return;
-        if (window._betterMyEdLastScriptId !== currentScriptId) return;
+      const celebrationListener = (e) => {
+        if (!isContextValid()) {
+          document.removeEventListener('click', celebrationListener);
+          return;
+        }
+        if (window._betterMyEdLastScriptId !== currentScriptId) {
+          document.removeEventListener('click', celebrationListener);
+          return;
+        }
         let target = e.target;
         while (target && target !== document) {
           if ((target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'SPAN') && target.textContent) {
@@ -879,7 +889,14 @@ function initBetterMyEd() {
           }
           target = target.parentNode;
         }
-      });
+      };
+
+      // Clean up previous listener if it exists
+      if (window._myedCelebrationListener) {
+        document.removeEventListener('click', window._myedCelebrationListener);
+      }
+      window._myedCelebrationListener = celebrationListener;
+      document.addEventListener('click', celebrationListener);
     }
 
     if (result.betterGrades) {
