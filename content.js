@@ -46,6 +46,10 @@ function runBookmarklet() {
     // Only apply sticky columns to actual data lists, not layout tables
     if(!t.querySelector('tr.listCell, tr.listCellAlt')) return;
     
+    // Skip sticky columns on attendance pages as requested (user wants names to scroll too)
+    if (window.location.href.includes('attendance') || 
+        window.location.href.includes('ClassroomAttendanceInput')) return;
+    
     const rows = t.rows;
     if(!rows.length) return;
     
@@ -273,10 +277,12 @@ function runBookmarklet() {
    * 1. Moves Class Code closer to names
    * 2. Moves Class Attendance directly beside names
    * 3. Formats names nicely
-   * 4. Adds custom colorful badges for "A" (Absent) and "L" (Late)
-   */
+    * 4. Adds custom colorful badges for "A" (Absent) and "L" (Late)
+    */
   let codeTries = 0;
-  const CODE_MAX = 25; // Wait max 5 seconds again
+  const CODE_MAX = 25;
+  const ATTENDANCE_ORDER_KEY = 'myed_attendance_column_order';
+
   const codeWait = setInterval(() => {
     if (!isContextValid()) {
       clearInterval(codeWait);
@@ -291,117 +297,208 @@ function runBookmarklet() {
       const firstRow = table.rows[0];
       if (!firstRow) return;
 
-      let codeIdx = -1;
-      let nameIdx = -1;
-      let classAttIdx = -1;
+      // Identify columns
+      const headers = [...firstRow.cells].map(c => c.textContent.trim());
+      const nameIdx = headers.indexOf('Name');
+      const codeIdx = headers.indexOf('Code');
 
-      [...firstRow.cells].forEach((cell, i) => {
-        const text = cell.textContent.trim();
-        if (text === 'Code') codeIdx = i;
-        if (text === 'Name') nameIdx = i;
-        if (text === 'Class Attendance') classAttIdx = i;
-      });
-
-      // Only act when Code is to the right of Name
-      if (codeIdx > nameIdx && nameIdx >= 0) {
+      // Only act on the main attendance table
+      if (nameIdx >= 0 && codeIdx >= 0) {
         found = true;
         clearInterval(codeWait);
-        const maxIdx = Math.max(codeIdx, classAttIdx);
 
-        // Stop the table from stretching to fill the page
-        table.style.width = 'auto';
-        table.style.tableLayout = 'auto';
-
-        [...table.rows].forEach(row => {
-          if (row.cells.length <= maxIdx) return;
-
-          // Grab references before any DOM moves
-          const nameCell = row.cells[nameIdx];
-          const codeCell = row.cells[codeIdx];
-          const classAttCell = classAttIdx >= 0 ? row.cells[classAttIdx] : null;
-
-          // 1. Move Code before Name
-          nameCell.parentElement.insertBefore(codeCell, nameCell.nextSibling);
-
-          // 2. Move Class Attendance before Code
-          if (classAttCell) {
-            codeCell.parentElement.insertBefore(classAttCell, codeCell.nextSibling);
-          }
-
-          // 3. Compact every cell in the row
-          [...row.cells].forEach(cell => {
-            cell.style.width = 'auto';
-            cell.style.whiteSpace = 'nowrap';
-            cell.style.padding = '0 10px';
-          });
-
-          // 4. Add subtle backgrounds and bold first names
-          if (row.rowIndex > 0) {
-            codeCell.style.backgroundColor = '#f9f9f9';
-            nameCell.style.backgroundColor = '#f9f9f9';
-
-            const nameTarget = nameCell.querySelector('a') || nameCell;
-            const text = nameTarget.textContent;
-            if (text.includes(',')) {
-              const parts = text.split(',');
-              if (parts.length >= 2) {
-                const lastName = parts[0].trim();
-                const firstName = parts.slice(1).join(',').trim();
-                nameTarget.innerHTML = `${lastName}, <strong>${firstName}</strong>`;
-              }
-            }
-            
-            // 5. Style Attendance Badges
-            if (classAttCell) {
-              const input = classAttCell.querySelector('input[type="text"]');
-              if (input) {
-                const val = input.value.trim().toUpperCase();
-                if (val === 'L' || val === 'A') {
-                  input.style.backgroundColor = val === 'L' ? '#ffd866' : '#ff6188';
-                  input.style.color = val === 'L' ? '#d25a00' : '#7c1a3b';
-                  input.style.fontWeight = 'bold';
-                  input.style.textAlign = 'center';
-                  input.style.borderRadius = '4px';
-                }
-              } else {
-                // Find pure text nodes to avoid destroying sibling elements like [edit] links
-                const walker = document.createTreeWalker(classAttCell, NodeFilter.SHOW_TEXT, null, false);
-                const nodesToReplace = [];
-                let textNode;
-                while ((textNode = walker.nextNode())) {
-                  const val = textNode.nodeValue.trim().toUpperCase();
-                  if (val === 'L' || val === 'A') {
-                    nodesToReplace.push({ node: textNode, val });
-                  }
-                }
-                
-                nodesToReplace.forEach(({ node, val }) => {
-                  const badgeColor = val === 'L' ? '#ffd866' : '#ff6188';
-                  const textColor = val === 'L' ? '#d25a00' : '#7c1a3b';
-                  const span = document.createElement('span');
-                  span.style.display = 'inline-flex';
-                  span.style.alignItems = 'center';
-                  span.style.justifyContent = 'center';
-                  span.style.width = '22px';
-                  span.style.height = '22px';
-                  span.style.borderRadius = '4px';
-                  span.style.backgroundColor = badgeColor;
-                  span.style.color = textColor;
-                  span.style.fontWeight = 'bold';
-                  span.style.fontSize = '13px';
-                  span.style.marginRight = '6px';
-                  span.textContent = val;
-                  node.parentNode.replaceChild(span, node);
-                });
-              }
-            }
-          }
+        // Load order and apply enhancements
+        chrome.storage.sync.get([ATTENDANCE_ORDER_KEY], (res) => {
+          if (!isContextValid()) return;
+          const savedOrder = res[ATTENDANCE_ORDER_KEY];
+          enhanceAttendanceTable(table, savedOrder);
         });
       }
     });
 
     if (codeTries > CODE_MAX && !found) clearInterval(codeWait);
   }, 200);
+
+  function enhanceAttendanceTable(table, desiredOrder) {
+    // 1. Initial Styles
+    table.style.width = 'auto';
+    table.style.tableLayout = 'auto';
+    table.style.borderCollapse = 'collapse';
+
+    // 2. Define Default Order if none saved
+    if (!desiredOrder) {
+      desiredOrder = ['Name', 'Class Attendance', 'Daily Attendance', 'Code'];
+    }
+
+    function applyOrderAndStyles(currentOrder) {
+      const rows = [...table.rows];
+      const headers = [...rows[0].cells].map(c => c.textContent.trim());
+      
+      // Map names to current physical indices
+      const map = {};
+      headers.forEach((h, i) => map[h] = i);
+
+      // Determine final index sequence
+      const finalIndices = [];
+      const usedIndices = new Set();
+
+      currentOrder.forEach(name => {
+        const originalIdx = headers.findIndex(h => h === name);
+        if (originalIdx !== -1 && !usedIndices.has(originalIdx)) {
+          finalIndices.push(originalIdx);
+          usedIndices.add(originalIdx);
+        }
+      });
+
+      // Add remaining columns that weren't in the order list
+      headers.forEach((_, i) => {
+        if (!usedIndices.has(i)) finalIndices.push(i);
+      });
+
+      // Reorder every row
+      rows.forEach(row => {
+        const cells = [...row.cells];
+        if (cells.length < finalIndices.length) return;
+        
+        // Clear and re-append
+        while (row.firstChild) row.removeChild(row.firstChild);
+        finalIndices.forEach(idx => {
+          if (cells[idx]) row.appendChild(cells[idx]);
+        });
+
+        // Styling and Badges
+        if (row.rowIndex === 0) {
+          // Header styling
+          [...row.cells].forEach((cell, idx) => {
+            cell.draggable = true;
+            cell.style.cursor = 'grab';
+            cell.style.padding = '10px 12px';
+            cell.style.backgroundColor = '#f1f5f9';
+            cell.style.borderBottom = '2px solid #cbd5e1';
+            cell.style.textAlign = 'center';
+            cell.style.position = 'relative';
+            
+            // Add visual grab handle (3 dots)
+            if (!cell.querySelector('.myed-grab-handle')) {
+              const handle = document.createElement('div');
+              handle.className = 'myed-grab-handle';
+              handle.innerHTML = '<span>&bull;</span><span>&bull;</span><span>&bull;</span>';
+              Object.assign(handle.style, {
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '3px',
+                fontSize: '14px',
+                color: '#94a3b8',
+                marginBottom: '4px',
+                lineHeight: '0.5',
+                opacity: '0.8',
+                userSelect: 'none'
+              });
+              cell.prepend(handle);
+            }
+
+            // Drag and Drop Listeners
+            cell.ondragstart = (e) => {
+              e.dataTransfer.setData('text/plain', idx);
+              cell.style.opacity = '0.4';
+              cell.style.cursor = 'grabbing';
+            };
+            cell.ondragend = () => {
+              cell.style.opacity = '1';
+              cell.style.cursor = 'grab';
+            };
+            cell.ondragover = (e) => e.preventDefault();
+            cell.ondrop = (e) => {
+              e.preventDefault();
+              const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+              const toIdx = idx;
+              if (fromIdx === toIdx) return;
+
+              const updatedHeaders = [...row.parentElement.rows[0].cells].map(c => {
+                // Get clean text without the handle dots
+                const clone = c.cloneNode(true);
+                const h = clone.querySelector('.myed-grab-handle');
+                if (h) h.remove();
+                return clone.textContent.trim();
+              });
+              const movedItem = updatedHeaders.splice(fromIdx, 1)[0];
+              updatedHeaders.splice(toIdx, 0, movedItem);
+
+              chrome.storage.sync.set({ [ATTENDANCE_ORDER_KEY]: updatedHeaders }, () => {
+                applyOrderAndStyles(updatedHeaders);
+              });
+            };
+          });
+        } else {
+          // Data row styling
+          const rowHeaders = [...table.rows[0].cells].map(c => c.textContent.trim());
+          [...row.cells].forEach((cell, cellIdx) => {
+            const headerName = rowHeaders[cellIdx];
+            cell.style.padding = '4px 10px';
+            cell.style.whiteSpace = 'nowrap';
+
+            if (headerName === 'Name' || headerName === 'Code') {
+              cell.style.backgroundColor = '#f9f9f9';
+              if (headerName === 'Name') {
+                const nameTarget = cell.querySelector('a') || cell;
+                const text = nameTarget.textContent;
+                if (text.includes(',')) {
+                  const parts = text.split(',');
+                  const lastName = parts[0].trim();
+                  const firstName = parts.slice(1).join(',').trim();
+                  nameTarget.innerHTML = `${lastName}, <strong>${firstName}</strong>`;
+                }
+              }
+            }
+
+            // Attendance Badges (Class & Daily)
+            if (headerName === 'Class Attendance' || headerName === 'Daily Attendance') {
+              const input = cell.querySelector('input[type="text"]');
+              if (input) {
+                const applyInputBadge = (val) => {
+                  if (val === 'L' || val === 'A') {
+                    input.style.backgroundColor = val === 'L' ? '#ffd866' : '#ff6188';
+                    input.style.color = val === 'L' ? '#d25a00' : '#7c1a3b';
+                    input.style.fontWeight = 'bold';
+                    input.style.textAlign = 'center';
+                    input.style.borderRadius = '4px';
+                  } else {
+                    input.style.backgroundColor = '';
+                    input.style.color = '';
+                  }
+                };
+                applyInputBadge(input.value.trim().toUpperCase());
+                input.oninput = () => applyInputBadge(input.value.trim().toUpperCase());
+              } else {
+                const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, null, false);
+                const nodesToReplace = [];
+                let textNode;
+                while ((textNode = walker.nextNode())) {
+                  const val = textNode.nodeValue.trim().toUpperCase();
+                  if (val === 'L' || val === 'A') nodesToReplace.push({ node: textNode, val });
+                }
+                nodesToReplace.forEach(({ node, val }) => {
+                  const badgeColor = val === 'L' ? '#ffd866' : '#ff6188';
+                  const textColor = val === 'L' ? '#d25a00' : '#7c1a3b';
+                  const span = document.createElement('span');
+                  Object.assign(span.style, {
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '22px', height: '22px', borderRadius: '4px',
+                    backgroundColor: badgeColor, color: textColor,
+                    fontWeight: 'bold', fontSize: '12px', marginRight: '4px'
+                  });
+                  span.textContent = val;
+                  node.parentNode.replaceChild(span, node);
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+
+    applyOrderAndStyles(desiredOrder);
+  }
 
   /**
    * ===== PART 4: POST STATUS INDICATOR =====
@@ -544,9 +641,134 @@ function runBookmarklet() {
  */
 let lastProcessedStdId = null;
 
+function applyReadOnlyStyles() {
+  if (document.getElementById('myed-readonly-applied')) return;
+  const FONT_SIZE_KEY = 'myed_comment_font_size';
+  const pre = document.querySelector('.blobTextReadOnly');
+  if (!pre) return;
+
+  const marker = document.createElement('div');
+  marker.id = 'myed-readonly-applied';
+  marker.style.display = 'none';
+  document.body.appendChild(marker);
+
+  // 1. Fix the text wrapping and overflow
+  Object.assign(pre.style, {
+    whiteSpace: 'pre-wrap',
+    wordWrap: 'break-word',
+    width: '100%',
+    height: 'auto',
+    minHeight: '120px',
+    maxHeight: '500px',
+    boxSizing: 'border-box',
+    padding: '15px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    lineHeight: '1.6',
+    color: '#333',
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+    overflowX: 'hidden',
+    overflowY: 'auto'
+  });
+
+  // 2. Set popup size and layout
+  Object.assign(document.body.style, {
+    width: '560px',
+    height: 'auto',
+    padding: '20px',
+    margin: '0',
+    backgroundColor: '#f8fafc',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px'
+  });
+  
+  const popupTable = document.getElementById('popupWindow');
+  if (popupTable) {
+    Object.assign(popupTable.style, {
+      width: '100%',
+      maxWidth: '560px',
+      margin: '0',
+      borderCollapse: 'collapse'
+    });
+  }
+
+  // 3. Style the student info header
+  const detailContainer = document.querySelector('.detailContainer');
+  if (detailContainer) {
+    Object.assign(detailContainer.style, {
+      backgroundColor: '#ffffff',
+      padding: '12px 18px',
+      borderRadius: '8px',
+      border: '1px solid #e0e0e0',
+      margin: '0'
+    });
+    const label = detailContainer.querySelector('.detailProperty');
+    if (label) {
+      label.style.backgroundColor = 'transparent';
+      label.style.color = '#64748b';
+      label.style.fontWeight = 'bold';
+      label.style.fontSize = '12px';
+    }
+  }
+
+  // 4. Style the Close/Cancel button
+  const cancelBtn = document.getElementById('cancelButton');
+  if (cancelBtn) {
+    Object.assign(cancelBtn.style, {
+      padding: '10px 24px',
+      borderRadius: '6px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      backgroundColor: '#3b82f6',
+      color: 'white',
+      border: 'none',
+      margin: '0',
+      transition: 'background-color 0.2s',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '13px',
+      alignSelf: 'flex-start'
+    });
+    cancelBtn.onmouseover = () => cancelBtn.style.backgroundColor = '#2563eb';
+    cancelBtn.onmouseout = () => cancelBtn.style.backgroundColor = '#3b82f6';
+  }
+
+  // 5. Apply saved font size and Resize Window
+  if (isContextValid()) {
+    chrome.storage.sync.get([FONT_SIZE_KEY], (res) => {
+      if (isContextValid()) {
+        if (res[FONT_SIZE_KEY]) {
+          const savedSize = res[FONT_SIZE_KEY] + 'px';
+          pre.style.fontSize = savedSize;
+          const studentName = document.querySelector('.detailValue');
+          if (studentName) studentName.style.fontSize = savedSize;
+        }
+
+        // Wait for font application and layout to settle before resizing
+        setTimeout(() => {
+          try {
+            const contentHeight = document.documentElement.scrollHeight;
+            window.resizeTo(600, contentHeight + 60);
+          } catch (e) {}
+        }, 100);
+      }
+    });
+  }
+}
+
 function runBetterGrades() {
   if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
   if (!window.location.href.includes('textCommentEdit.do')) {
+    return;
+  }
+
+  // Handle Read-Only Popup (only if the editable textarea is missing)
+  if (document.querySelector('input[name="readOnly"][value="true"]') && !document.getElementById('textComment')) {
+    applyReadOnlyStyles();
     return;
   }
 
