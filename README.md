@@ -13,6 +13,7 @@
 - **Easy Button Access**: Attendance buttons are moved next to names for easier access. Buttons are always accessible so teachers can easily switch between absent and late.
 - **Highlighted Student Names**: Roster lists bold students' first names.
 - **Attendance Status Badges**: Identifies "Absent" (A) or "Late" (L) markings at a glance with high-visibility, colour-coded badges.
+- **Draggable Attendance Columns**: Reorder columns in any order you like on the attendance roster by dragging the headers. Your custom layout is saved automatically and synced across all your devices via your Google account.
 - **Post Status Indicator**: Adds an intelligent "Not Posted" or "Posted" badge next to the save button in Attendance. It automatically flips back to "Not Posted" if you change any attendance codes, ensuring you never forget to re-save after making a late change.
 - **Improved Row Highlighting**: Adds a subtle row-highlight effect when hovering over data rows.
 - **Closer Columns**: Column widths have been reduced to make it easier to read data across rows.

@@ -372,31 +372,12 @@ function runBookmarklet() {
           [...row.cells].forEach((cell, idx) => {
             cell.draggable = true;
             cell.style.cursor = 'grab';
-            cell.style.padding = '10px 12px';
+            cell.style.padding = '12px';
             cell.style.backgroundColor = '#f1f5f9';
             cell.style.borderBottom = '2px solid #cbd5e1';
-            cell.style.textAlign = 'center';
             cell.style.position = 'relative';
+            cell.style.transition = 'box-shadow 0.2s';
             
-            // Add visual grab handle (3 dots)
-            if (!cell.querySelector('.myed-grab-handle')) {
-              const handle = document.createElement('div');
-              handle.className = 'myed-grab-handle';
-              handle.innerHTML = '<span>&bull;</span><span>&bull;</span><span>&bull;</span>';
-              Object.assign(handle.style, {
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '3px',
-                fontSize: '14px',
-                color: '#94a3b8',
-                marginBottom: '4px',
-                lineHeight: '0.5',
-                opacity: '0.8',
-                userSelect: 'none'
-              });
-              cell.prepend(handle);
-            }
-
             // Drag and Drop Listeners
             cell.ondragstart = (e) => {
               e.dataTransfer.setData('text/plain', idx);
@@ -406,26 +387,36 @@ function runBookmarklet() {
             cell.ondragend = () => {
               cell.style.opacity = '1';
               cell.style.cursor = 'grab';
+              cell.style.boxShadow = '';
             };
-            cell.ondragover = (e) => e.preventDefault();
+            cell.ondragover = (e) => {
+              e.preventDefault();
+              cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
+            };
+            cell.ondragenter = (e) => {
+              e.preventDefault();
+              cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
+            };
+            cell.ondragleave = () => {
+              cell.style.boxShadow = '';
+            };
             cell.ondrop = (e) => {
               e.preventDefault();
+              cell.style.boxShadow = '';
               const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
               const toIdx = idx;
               if (fromIdx === toIdx) return;
 
-              const updatedHeaders = [...row.parentElement.rows[0].cells].map(c => {
-                // Get clean text without the handle dots
-                const clone = c.cloneNode(true);
-                const h = clone.querySelector('.myed-grab-handle');
-                if (h) h.remove();
-                return clone.textContent.trim();
-              });
-              const movedItem = updatedHeaders.splice(fromIdx, 1)[0];
-              updatedHeaders.splice(toIdx, 0, movedItem);
+              const headers = [...row.parentElement.rows[0].cells].map(c => c.textContent.trim());
+              const item = headers[fromIdx];
+              const targetName = headers[toIdx];
+              
+              const newOrder = headers.filter((_, i) => i !== fromIdx);
+              const newToIdx = newOrder.indexOf(targetName);
+              newOrder.splice(newToIdx, 0, item);
 
-              chrome.storage.sync.set({ [ATTENDANCE_ORDER_KEY]: updatedHeaders }, () => {
-                applyOrderAndStyles(updatedHeaders);
+              chrome.storage.sync.set({ [ATTENDANCE_ORDER_KEY]: newOrder }, () => {
+                applyOrderAndStyles(newOrder);
               });
             };
           });
@@ -449,6 +440,30 @@ function runBookmarklet() {
                   nameTarget.innerHTML = `${lastName}, <strong>${firstName}</strong>`;
                 }
               }
+              
+              // Special Rule: Disable "A" (Absent) button if student is marked "A-E" (Excused)
+              if (headerName === 'Code') {
+                const classAttIdx = rowHeaders.indexOf('Class Attendance');
+                if (classAttIdx !== -1) {
+                  const classAttCell = row.cells[classAttIdx];
+                  if (classAttCell && classAttCell.textContent.includes('A-E')) {
+                    const buttons = cell.querySelectorAll('button, input[type="button"], input[type="submit"], a');
+                    buttons.forEach(btn => {
+                      const btnText = (btn.textContent || btn.value || '').trim().toUpperCase();
+                      if (btnText === 'A') {
+                        btn.disabled = true;
+                        Object.assign(btn.style, {
+                          opacity: '0.4',
+                          pointerEvents: 'none',
+                          filter: 'grayscale(1)',
+                          cursor: 'not-allowed'
+                        });
+                        btn.title = 'Student is already marked Excused (A-E) in Class Attendance.';
+                      }
+                    });
+                  }
+                }
+              }
             }
 
             // Attendance Badges (Class & Daily)
@@ -468,8 +483,17 @@ function runBookmarklet() {
                   }
                 };
                 applyInputBadge(input.value.trim().toUpperCase());
-                input.oninput = () => applyInputBadge(input.value.trim().toUpperCase());
+                if (!input._myedBadgeListener) {
+                  input._myedBadgeListener = true;
+                  input.addEventListener('input', () => applyInputBadge(input.value.trim().toUpperCase()));
+                }
               } else {
+                // Clear existing badges to prevent "widening" / nesting
+                cell.querySelectorAll('.myed-badge').forEach(b => {
+                  const text = b.textContent;
+                  b.parentNode.replaceChild(document.createTextNode(text), b);
+                });
+
                 const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, null, false);
                 const nodesToReplace = [];
                 let textNode;
@@ -481,6 +505,7 @@ function runBookmarklet() {
                   const badgeColor = val === 'L' ? '#ffd866' : '#ff6188';
                   const textColor = val === 'L' ? '#d25a00' : '#7c1a3b';
                   const span = document.createElement('span');
+                  span.className = 'myed-badge';
                   Object.assign(span.style, {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: '22px', height: '22px', borderRadius: '4px',
