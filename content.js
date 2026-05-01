@@ -375,6 +375,8 @@ function runBookmarklet() {
             cell.style.padding = '12px';
             cell.style.backgroundColor = '#f1f5f9';
             cell.style.borderBottom = '2px solid #cbd5e1';
+            if (idx === 0) cell.style.borderLeft = '1px solid #cbd5e1';
+            if (idx === row.cells.length - 1) cell.style.borderRight = '1px solid #cbd5e1';
             cell.style.position = 'relative';
             cell.style.transition = 'box-shadow 0.2s';
             
@@ -436,6 +438,9 @@ function runBookmarklet() {
             const headerName = rowHeaders[cellIdx];
             cell.style.padding = '4px 10px';
             cell.style.whiteSpace = 'nowrap';
+            cell.style.borderBottom = '1px solid #f1f5f9';
+            if (cellIdx === 0) cell.style.borderLeft = '1px solid #cbd5e1';
+            if (cellIdx === row.cells.length - 1) cell.style.borderRight = '1px solid #cbd5e1';
 
             if (headerName === 'Name' || headerName === 'Code') {
               cell.style.backgroundColor = '#f9f9f9';
@@ -709,21 +714,23 @@ function applyReadOnlyStyles() {
 
   // 2. Set popup size and layout
   Object.assign(document.body.style, {
-    width: '560px',
+    width: '100%',
     height: 'auto',
     padding: '20px',
     margin: '0',
     backgroundColor: '#f8fafc',
     display: 'flex',
     flexDirection: 'column',
-    gap: '15px'
+    gap: '20px',
+    boxSizing: 'border-box',
+    overflowX: 'hidden'
   });
   
   const popupTable = document.getElementById('popupWindow');
   if (popupTable) {
     Object.assign(popupTable.style, {
       width: '100%',
-      maxWidth: '560px',
+      maxWidth: '800px',
       margin: '0',
       borderCollapse: 'collapse'
     });
@@ -751,8 +758,24 @@ function applyReadOnlyStyles() {
   // 4. Style the Close/Cancel button
   const cancelBtn = document.getElementById('cancelButton');
   if (cancelBtn) {
+    // Add Note Label above the button
+    if (!document.getElementById('myed-readonly-note')) {
+      const note = document.createElement('div');
+      note.id = 'myed-readonly-note';
+      note.textContent = "This comment is not editable because Report Cards have already been posted.";
+      Object.assign(note.style, {
+        fontSize: '12px',
+        color: '#64748b',
+        fontWeight: '500',
+        lineHeight: '1.4',
+        marginBottom: '8px',
+        fontFamily: '"Inter", -apple-system, sans-serif'
+      });
+      cancelBtn.parentNode.insertBefore(note, cancelBtn);
+    }
+
     Object.assign(cancelBtn.style, {
-      padding: '10px 24px',
+      padding: '6px 16px',
       borderRadius: '6px',
       fontWeight: '600',
       cursor: 'pointer',
@@ -764,7 +787,7 @@ function applyReadOnlyStyles() {
       display: 'inline-flex',
       alignItems: 'center',
       gap: '8px',
-      fontSize: '13px',
+      fontSize: '12px',
       alignSelf: 'flex-start'
     });
     cancelBtn.onmouseover = () => cancelBtn.style.backgroundColor = '#2563eb';
@@ -785,8 +808,21 @@ function applyReadOnlyStyles() {
         // Wait for font application and layout to settle before resizing
         setTimeout(() => {
           try {
-            const contentHeight = document.documentElement.scrollHeight;
-            window.resizeTo(600, contentHeight + 60);
+            // Measure the bottom of the last element (the cancel button)
+            // to ensure exactly 20px of space at the bottom.
+            const buttonBottom = cancelBtn.getBoundingClientRect().bottom;
+            
+            // Dynamically calculate the browser's "chrome" (title bar, etc.)
+            const hBuffer = window.outerHeight - window.innerHeight;
+            const wBuffer = window.outerWidth - window.innerWidth;
+            
+            // Target inner height is exactly 20px below the button
+            const targetInnerHeight = Math.ceil(buttonBottom + 20);
+            
+            window.resizeTo(600 + wBuffer, targetInnerHeight + hBuffer);
+            
+            // Hide any remaining "junk" below the padding
+            document.body.style.overflowY = 'hidden';
           } catch (e) {}
         }, 100);
       }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Better MyEd",
-  "version": "2.1",
+  "version": "2.2",
   "description": "Improves the layout and usability of the BC MyEducation portal.",
   "permissions": ["storage", "scripting", "activeTab"],
   "optional_host_permissions": [
