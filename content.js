@@ -327,7 +327,7 @@ function runBookmarklet() {
 
     // 2. Define Default Order if none saved
     if (!desiredOrder) {
-      desiredOrder = ['Name', 'Class Attendance', 'Daily Attendance', 'Code'];
+      desiredOrder = ['Name', 'Code', 'Class Attendance', 'Daily Attendance'];
     }
 
     function applyOrderAndStyles(currentOrder) {
@@ -391,17 +391,24 @@ function runBookmarklet() {
             };
             cell.ondragover = (e) => {
               e.preventDefault();
-              cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
+              const rect = cell.getBoundingClientRect();
+              const midX = rect.left + rect.width / 2;
+              if (e.clientX > midX) {
+                cell.style.boxShadow = 'inset -4px 0 0 0 #3b82f6';
+                cell._myedDropSide = 'right';
+              } else {
+                cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
+                cell._myedDropSide = 'left';
+              }
             };
-            cell.ondragenter = (e) => {
-              e.preventDefault();
-              cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
-            };
+            cell.ondragenter = (e) => e.preventDefault();
             cell.ondragleave = () => {
               cell.style.boxShadow = '';
+              delete cell._myedDropSide;
             };
             cell.ondrop = (e) => {
               e.preventDefault();
+              const side = cell._myedDropSide || 'left';
               cell.style.boxShadow = '';
               const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
               const toIdx = idx;
@@ -412,7 +419,9 @@ function runBookmarklet() {
               const targetName = headers[toIdx];
               
               const newOrder = headers.filter((_, i) => i !== fromIdx);
-              const newToIdx = newOrder.indexOf(targetName);
+              let newToIdx = newOrder.indexOf(targetName);
+              if (side === 'right') newToIdx++;
+              
               newOrder.splice(newToIdx, 0, item);
 
               chrome.storage.sync.set({ [ATTENDANCE_ORDER_KEY]: newOrder }, () => {
