@@ -144,6 +144,34 @@
         transform: translateY(0);
       }
 
+      .tip-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #ff5e5b;
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.2s ease,
+          transform 0.15s ease;
+        white-space: nowrap;
+        margin-top: 24px;
+        text-decoration: none;
+      }
+      .tip-btn:hover {
+        background: #e04e4b;
+        transform: translateY(-1px);
+      }
+      .tip-btn svg {
+        flex-shrink: 0;
+      }
+
       .footer-text {
         margin-top: 24px;
         font-size: 14px;
@@ -159,8 +187,9 @@
     <div class="container" id="main-state">
       <img src="icon128.png" alt="Better MyEd Logo" class="logo" />
       <h1>Welcome to Better MyEd</h1>
+      <span class="author-credit">By Jonathan Kung</span>
       <p>
-        Your MyEducation BC experience, upgraded. One last step to get started!
+        Your MyEducation experience, enhanced. One last step to get started!
       </p>
 
       <div class="features">
@@ -201,6 +230,28 @@
         Enhancements only improve usability and don't affect the data stored.<br />
         No data ever leaves your browser.
       </p>
+
+      <button class="tip-btn tipBtn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M10 2v2" />
+          <path d="M14 2v2" />
+          <path
+            d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"
+          />
+          <path d="M6 2v2" />
+        </svg>
+        Tip Me
+      </button>
     </div>
 
     <div class="container" id="success-state">
@@ -208,6 +259,28 @@
       <h1>You're all set!</h1>
       <p>Better MyEd is now active and ready to use.</p>
       <button id="launchBtn" class="btn">Take me to MyEd</button>
+
+      <button class="tip-btn tipBtn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M10 2v2" />
+          <path d="M14 2v2" />
+          <path
+            d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"
+          />
+          <path d="M6 2v2" />
+        </svg>
+        Tip Me
+      </button>
     </div>
 
     <script src="onboarding.js"></script>

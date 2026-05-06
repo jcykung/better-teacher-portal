@@ -1178,7 +1178,7 @@ function showFirstRunOverlay() {
   modal.innerHTML = `
     <h2 style="margin-top: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Better MyEd is Ready! ✨</h2>
     <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Welcome to your upgraded MyEducation experience. We've enabled all the premium features for you!
+      Welcome to your enhanced MyEducation experience.<br>All the features and now enabled for you!
     </p>
     <div style="text-align: left; background: #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 24px; box-sizing: border-box;">
       <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">

@@ -37,3 +37,10 @@ launchBtn.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://www.myeducation.gov.bc.ca/aspen/logon.do' });
     window.close();
 });
+
+// Tip Me functionality
+document.querySelectorAll('.tipBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://ko-fi.com/coolpuddytat' });
+    });
+});
