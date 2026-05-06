@@ -14,10 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load the saved states from storage
   chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], (result) => {
-    toggleAttendance.checked = result.showAttendance || false;
-    toggleCelebration.checked = result.celebrationMode || false;
-    toggleGrades.checked = result.betterGrades || false;
+    toggleAttendance.checked = result.showAttendance !== false;
+    toggleCelebration.checked = result.celebrationMode !== false;
+    toggleGrades.checked = result.betterGrades !== false;
   });
+
+  // Add a way to re-open the welcome page
+  const welcomeLink = document.createElement('a');
+  welcomeLink.href = '#';
+  welcomeLink.textContent = 'Show Welcome Screen';
+  welcomeLink.style.display = 'block';
+  welcomeLink.style.marginTop = '15px';
+  welcomeLink.style.fontSize = '12px';
+  welcomeLink.style.color = '#64748b';
+  welcomeLink.style.textDecoration = 'none';
+  welcomeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: 'onboarding.html' });
+  });
+  statusEl.parentNode.appendChild(welcomeLink);
 
   async function registerScript() {
     try {

@@ -375,8 +375,8 @@ function runBookmarklet() {
             cell.style.padding = '12px';
             cell.style.backgroundColor = '#f1f5f9';
             cell.style.borderBottom = '2px solid #cbd5e1';
-            if (idx === 0) cell.style.borderLeft = '1px solid #cbd5e1';
-            if (idx === row.cells.length - 1) cell.style.borderRight = '1px solid #cbd5e1';
+            cell.style.borderLeft = (idx === 0) ? '1px solid #cbd5e1' : 'none';
+            cell.style.borderRight = (idx === row.cells.length - 1) ? '1px solid #cbd5e1' : 'none';
             cell.style.position = 'relative';
             cell.style.transition = 'box-shadow 0.2s';
             
@@ -439,8 +439,8 @@ function runBookmarklet() {
             cell.style.padding = '4px 10px';
             cell.style.whiteSpace = 'nowrap';
             cell.style.borderBottom = '1px solid #f1f5f9';
-            if (cellIdx === 0) cell.style.borderLeft = '1px solid #cbd5e1';
-            if (cellIdx === row.cells.length - 1) cell.style.borderRight = '1px solid #cbd5e1';
+            cell.style.borderLeft = (cellIdx === 0) ? '1px solid #cbd5e1' : 'none';
+            cell.style.borderRight = (cellIdx === row.cells.length - 1) ? '1px solid #cbd5e1' : 'none';
 
             if (headerName === 'Name' || headerName === 'Code') {
               cell.style.backgroundColor = '#f9f9f9';
@@ -1139,13 +1139,106 @@ function injectBetterGradesUI(textArea, stdId) {
 const currentScriptId = Math.random().toString(36).substring(2, 9);
 window._betterMyEdLastScriptId = currentScriptId;
 
+function showFirstRunOverlay() {
+  if (document.getElementById('better-myed-onboarding')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'better-myed-onboarding';
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backdropFilter: 'blur(8px)',
+    zIndex: '999999',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    opacity: '0',
+    transition: 'opacity 0.4s ease'
+  });
+
+  const modal = document.createElement('div');
+  Object.assign(modal.style, {
+    backgroundColor: 'white',
+    padding: '40px',
+    borderRadius: '24px',
+    maxWidth: '500px',
+    width: '90%',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    textAlign: 'center',
+    transform: 'translateY(20px)',
+    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+    boxSizing: 'border-box'
+  });
+
+  modal.innerHTML = `
+    <h2 style="margin-top: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Better MyEd is Ready! ✨</h2>
+    <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Welcome to your upgraded MyEducation experience. We've enabled all the premium features for you!
+    </p>
+    <div style="text-align: left; background: #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 24px; box-sizing: border-box;">
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+        <span style="font-size: 20px; line-height: 1;">📊</span>
+        <span style="color: #334155; font-weight: 600; font-size: 16px; line-height: 1.5;">Smarter Attendance</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+        <span style="font-size: 20px; line-height: 1;">✨</span>
+        <span style="color: #334155; font-weight: 600; font-size: 16px; line-height: 1.5;">Auto-saving Comments</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
+        <span style="font-size: 20px; line-height: 1;">🎉</span>
+        <span style="color: #334155; font-weight: 600; font-size: 16px; line-height: 1.5;">Celebration Mode</span>
+      </div>
+    </div>
+    <p style="font-size: 14px; color: #94a3b8; margin-bottom: 24px;">
+      You can customize these anytime by clicking the extension icon.
+    </p>
+    <button id="close-onboarding" style="
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+    ">Got it, let's go!</button>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Animate in
+  setTimeout(() => {
+    overlay.style.opacity = '1';
+    modal.style.transform = 'translateY(0)';
+  }, 10);
+
+  document.getElementById('close-onboarding').onclick = () => {
+    overlay.style.opacity = '0';
+    modal.style.transform = 'translateY(20px)';
+    setTimeout(() => overlay.remove(), 400);
+    chrome.storage.sync.set({ firstRun: false });
+  };
+}
+
 function initBetterMyEd() {
   if (!isContextValid()) return;
   
-  chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], (result) => {
+  chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades', 'firstRun'], (result) => {
     if (!isContextValid()) return;
     // If a newer script has started, this one should stop
     if (window._betterMyEdLastScriptId !== currentScriptId) return;
+
+    if (result.firstRun) {
+      showFirstRunOverlay();
+    }
 
     if (result.showAttendance) {
       if (document.readyState === 'loading') {
