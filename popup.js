@@ -35,39 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
   statusEl.parentNode.appendChild(welcomeLink);
 
   async function registerScript() {
-    try {
-      const scripts = await chrome.scripting.getRegisteredContentScripts();
-      if (!scripts.some(s => s.id === 'better-myed-script')) {
-        await chrome.scripting.registerContentScripts([{
-          id: 'better-myed-script',
-          js: ['canvas-confetti.js', 'content.js'],
-          matches: [MYED_PATTERN],
-          runAt: 'document_idle',
-          allFrames: true
-        }]);
-      } else {
-        // Unregister and reregister to ensure both scripts are present
-        await chrome.scripting.unregisterContentScripts({ ids: ['better-myed-script'] });
-        await chrome.scripting.registerContentScripts([{
-          id: 'better-myed-script',
-          js: ['canvas-confetti.js', 'content.js'],
-          matches: [MYED_PATTERN],
-          runAt: 'document_idle',
-          allFrames: true
-        }]);
-      }
-    } catch (err) {
-      console.error("Failed to register script:", err);
-    }
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'registerScripts' }, resolve);
+    });
   }
 
   async function unregisterScript() {
-    try {
-      await chrome.scripting.unregisterContentScripts({ ids: ['better-myed-script'] });
-    } catch (err) {
-      // Might not be registered, that's fine
-    }
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'unregisterScripts' }, resolve);
+    });
   }
+
 
   async function handleToggleChange() {
     const showAttendance = toggleAttendance.checked;
@@ -128,4 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleAttendance.addEventListener('change', handleToggleChange);
   toggleCelebration.addEventListener('change', handleToggleChange);
   toggleGrades.addEventListener('change', handleToggleChange);
+
+  // Set version number
+  const versionEl = document.createElement('div');
+  versionEl.textContent = `v. ${chrome.runtime.getManifest().version}`;
+  Object.assign(versionEl.style, {
+    position: 'absolute',
+    bottom: '8px',
+    right: '12px',
+    fontSize: '9px',
+    color: '#95a5a6'
+  });
+  document.body.appendChild(versionEl);
 });

@@ -10,14 +10,9 @@ enableBtn.addEventListener('click', () => {
         origins: [MYED_PATTERN]
     }, (granted) => {
         if (granted) {
-            // Register scripts if not already registered
-            chrome.scripting.registerContentScripts([{
-                id: 'better-myed-script',
-                js: ['canvas-confetti.js', 'content.js'],
-                matches: [MYED_PATTERN],
-                runAt: 'document_idle',
-                allFrames: true
-            }]).catch(err => console.log("Already registered or error:", err));
+            // Register scripts via background script
+            chrome.runtime.sendMessage({ action: 'registerScripts' });
+
 
             // Show success state
             mainState.style.display = 'none';
