@@ -378,18 +378,46 @@ function runBookmarklet() {
             cell.style.borderLeft = (idx === 0) ? '1px solid #cbd5e1' : 'none';
             cell.style.borderRight = (idx === row.cells.length - 1) ? '1px solid #cbd5e1' : 'none';
             cell.style.position = 'relative';
-            cell.style.transition = 'box-shadow 0.2s';
+            cell.style.transition = 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease';
             
+            // Hover Rise Effect
+            cell.onmouseenter = () => {
+              if (!window._myedDragActive) {
+                cell.style.transform = 'translateY(-3px)';
+                cell.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                cell.style.backgroundColor = '#e2e8f0';
+                cell.style.zIndex = '10';
+              }
+            };
+            cell.onmouseleave = () => {
+              if (!window._myedDragActive) {
+                cell.style.transform = '';
+                cell.style.boxShadow = '';
+                cell.style.backgroundColor = '#f1f5f9';
+                cell.style.zIndex = '';
+              }
+            };
+
             // Drag and Drop Listeners
             cell.ondragstart = (e) => {
+              window._myedDragActive = true;
               e.dataTransfer.setData('text/plain', idx);
               cell.style.opacity = '0.4';
               cell.style.cursor = 'grabbing';
+              // Flat style when dragging
+              cell.style.transform = '';
+              cell.style.boxShadow = '';
+              cell.style.zIndex = '';
+              cell.style.backgroundColor = '#f1f5f9';
             };
             cell.ondragend = () => {
-              cell.style.opacity = '1';
+              window._myedDragActive = false;
+              cell.style.opacity = '';
               cell.style.cursor = 'grab';
+              cell.style.transform = '';
               cell.style.boxShadow = '';
+              cell.style.zIndex = '';
+              cell.style.backgroundColor = '#f1f5f9';
             };
             cell.ondragover = (e) => {
               e.preventDefault();
@@ -830,8 +858,65 @@ function applyReadOnlyStyles() {
   }
 }
 
+function replacePostedPins() {
+  if (!isContextValid()) return;
+  const pins = document.querySelectorAll('img[src*="pin-red.gif"]');
+  pins.forEach(img => {
+    // Only process if we haven't already marked and appended next to this image
+    if (img.dataset.myedPostedMarked === 'true') return;
+    img.dataset.myedPostedMarked = 'true';
+
+    const badge = document.createElement('span');
+    badge.className = 'myed-posted-column-badge';
+    badge.textContent = 'Posted';
+    badge.title = img.title || img.alt || 'Posted';
+    
+    Object.assign(badge.style, {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2px 5px',
+      borderRadius: '4px',
+      fontSize: '9px',
+      fontWeight: 'bold',
+      fontFamily: '"Inter", -apple-system, sans-serif',
+      backgroundColor: '#dcfce7',
+      color: '#166534',
+      border: '1px solid #bbf7d0',
+      textTransform: 'uppercase',
+      letterSpacing: '0.3px',
+      marginLeft: '4px',
+      marginRight: '4px',
+      verticalAlign: 'middle',
+      cursor: 'default',
+      userSelect: 'none'
+    });
+    
+    // Insert the badge right after the red-pin image
+    img.parentNode.insertBefore(badge, img.nextSibling);
+  });
+}
+
 function runBetterGrades() {
   if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+
+  // Handle Gradebook Column Pins Replacement
+  if (window.location.href.includes('staffGradeInput') || window.location.href.includes('gradebook')) {
+    replacePostedPins();
+    const pinInterval = setInterval(() => {
+      if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+        clearInterval(pinInterval);
+        return;
+      }
+      replacePostedPins();
+    }, 1000);
+    
+    if (window._myedPinInterval) clearInterval(window._myedPinInterval);
+    window._myedPinInterval = pinInterval;
+    return;
+  }
+
+  // Handle Comment Editor (textCommentEdit.do)
   if (!window.location.href.includes('textCommentEdit.do')) {
     return;
   }
@@ -879,6 +964,48 @@ function runBetterGrades() {
   // Store for cleanup
   if (window._myedGradesInterval) clearInterval(window._myedGradesInterval);
   window._myedGradesInterval = intervalId;
+}
+
+function resizePopupToFit() {
+  if (!isContextValid()) return;
+  setTimeout(() => {
+    try {
+      const buttons = [
+        document.getElementById('saveButton'),
+        document.getElementById('saveAndPreviousButton'),
+        document.getElementById('saveAndNextButton'),
+        document.getElementById('cancelButton')
+      ].filter(Boolean);
+
+      let maxBottom = 0;
+      if (buttons.length > 0) {
+        buttons.forEach(btn => {
+          const rect = btn.getBoundingClientRect();
+          const absBottom = rect.bottom + window.scrollY;
+          if (absBottom > maxBottom) {
+            maxBottom = absBottom;
+          }
+        });
+      } else {
+        maxBottom = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      }
+
+      // Add a safety padding of 30px
+      const targetInnerHeight = Math.ceil(maxBottom + 30);
+      const maxScreenHeight = window.screen.availHeight ? window.screen.availHeight - 80 : 900;
+      const finalHeight = Math.min(maxScreenHeight, targetInnerHeight);
+
+      const hBuffer = window.outerHeight - window.innerHeight;
+      const wBuffer = window.outerWidth - window.innerWidth;
+
+      // Ensure a comfortable width for the editor with the sidebar
+      const targetWidth = Math.max(780, window.innerWidth);
+
+      window.resizeTo(targetWidth + wBuffer, finalHeight + hBuffer);
+    } catch (e) {
+      console.error('Error resizing popup:', e);
+    }
+  }, 50);
 }
 
 function injectBetterGradesUI(textArea, stdId) {
@@ -987,16 +1114,28 @@ function injectBetterGradesUI(textArea, stdId) {
     return btn;
   };
 
+  const adjustLayout = () => {
+    if (!isContextValid()) return;
+    textArea.style.height = 'auto';
+    textArea.style.height = Math.max(200, textArea.scrollHeight) + 'px';
+    resizePopupToFit();
+  };
+
   const updateFontSize = (delta) => {
     if (!isContextValid()) return;
     chrome.storage.sync.get([FONT_SIZE_KEY], (res) => {
       if (!isContextValid()) return;
-      let currentSize = res[FONT_SIZE_KEY] || 12;
+      let currentSize = res[FONT_SIZE_KEY];
+      if (currentSize === undefined) {
+        const computedSize = parseFloat(window.getComputedStyle(textArea).fontSize);
+        currentSize = isNaN(computedSize) ? 12 : computedSize;
+      }
       currentSize = Math.max(8, Math.min(48, currentSize + delta));
       if (!isContextValid()) return;
       chrome.storage.sync.set({ [FONT_SIZE_KEY]: currentSize }, () => {
         if (!isContextValid()) return;
         textArea.style.fontSize = currentSize + 'px';
+        adjustLayout();
       });
     });
   };
@@ -1084,19 +1223,20 @@ function injectBetterGradesUI(textArea, stdId) {
   if (isContextValid()) {
     chrome.storage.sync.get([FONT_SIZE_KEY], (res) => {
       if (!isContextValid()) return;
-      if (res[FONT_SIZE_KEY]) textArea.style.fontSize = res[FONT_SIZE_KEY] + 'px';
-    });
-  }
-
-  if (isContextValid()) {
-    chrome.storage.local.get([storageKey], (result) => {
-      if (!isContextValid()) return;
-      if (result[storageKey] !== undefined && result[storageKey] !== textArea.value) {
-        textArea.value = result[storageKey];
-        updateUI('draft');
-      } else {
-        updateUI('posted');
+      if (res[FONT_SIZE_KEY]) {
+        textArea.style.fontSize = res[FONT_SIZE_KEY] + 'px';
       }
+
+      chrome.storage.local.get([storageKey], (result) => {
+        if (!isContextValid()) return;
+        if (result[storageKey] !== undefined && result[storageKey] !== textArea.value) {
+          textArea.value = result[storageKey];
+          updateUI('draft');
+        } else {
+          updateUI('posted');
+        }
+        adjustLayout();
+      });
     });
   }
 
@@ -1109,12 +1249,18 @@ function injectBetterGradesUI(textArea, stdId) {
   textArea.addEventListener('input', () => {
     if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
     updateUI('typing');
+
+    // Auto-adjust textarea height while typing
+    textArea.style.height = 'auto';
+    textArea.style.height = Math.max(200, textArea.scrollHeight) + 'px';
+
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       if (!isContextValid()) return;
       chrome.storage.local.set({ [storageKey]: textArea.value }, () => {
         if (!isContextValid()) return;
         updateUI('draft');
+        resizePopupToFit();
       });
     }, 500);
   });
