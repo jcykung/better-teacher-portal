@@ -23,9 +23,9 @@ function runBookmarklet() {
    */
   // 1. Inject custom CSS styles globally. We check if it exists so we don't accidentally add it twice.
   // Feel free to change the RGBA values below to customize the hover color!
-  if(!document.getElementById('myed-global-hover')){
+  if(!document.getElementById('btp-global-hover')){
     const hoverStyle = document.createElement('style');
-    hoverStyle.id = 'myed-global-hover';
+    hoverStyle.id = 'btp-global-hover';
     hoverStyle.textContent = `
       table tbody tr.listCell:hover td, table tbody tr.listCellAlt:hover td {
         box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
@@ -99,7 +99,7 @@ function runBookmarklet() {
         return;
       }
       tries++;
-      // #div3 usually contains the totals data on MyEd Trends view
+      // #div3 usually contains the totals data on the trends view
       const totalsDiv = document.querySelector('#div3');
       if(!totalsDiv){
         if(tries > MAX) clearInterval(wait);
@@ -122,11 +122,11 @@ function runBookmarklet() {
     const middleTD = tds[1];
     
     // Prevent adding the style multiple times
-    if(!document.getElementById('myed-style')){
+    if(!document.getElementById('btp-style')){
       const style = document.createElement('style');
-      style.id = 'myed-style';
+      style.id = 'btp-style';
       style.textContent = `
-        .myed-freeze {
+        .btp-freeze {
           position: sticky !important;
           z-index: 10 !important;
           background-clip: border-box !important;
@@ -136,18 +136,18 @@ function runBookmarklet() {
           border-right: 1.5px solid #000 !important;
           box-sizing: border-box;
         }
-        tr.myed-row-hover #myed-totals-column {
+        tr.btp-row-hover #btp-totals-column {
           box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
         }
         /* ensure children of frozen columns also have solid background if body is transparent */
-        .myed-freeze > * {
+        .btp-freeze > * {
           background-color: inherit;
         }
-        .myed-scroll {
+        .btp-scroll {
           overflow-x: auto;
         }
         /* Unified row highlighting for Trends */
-        tr.myed-row-hover td {
+        tr.btp-row-hover td {
           box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
         }
       `;
@@ -168,7 +168,7 @@ function runBookmarklet() {
     namesTD.style.padding = '0';
     namesTD.style.border = 'none';
     
-    totalsTD.id = 'myed-totals-column';
+    totalsTD.id = 'btp-totals-column';
     totalsTD.style.width = '1px';
     totalsTD.style.whiteSpace = 'nowrap';
     totalsTD.style.padding = '0';
@@ -189,8 +189,8 @@ function runBookmarklet() {
         // Phase 2: Write styles
         let currentLeft = 0;
         for (const { cell, width } of freezeData) {
-          if (!cell.classList.contains('myed-freeze')) {
-            cell.classList.add('myed-freeze');
+          if (!cell.classList.contains('btp-freeze')) {
+            cell.classList.add('btp-freeze');
           }
           const newLeft = currentLeft + 'px';
           if (cell.style.left !== newLeft) {
@@ -211,12 +211,12 @@ function runBookmarklet() {
     }
 
     updateStickyColumns();
-    middleTD.classList.add('myed-scroll');
+    middleTD.classList.add('btp-scroll');
 
     // 4. Watch for dynamic content loading in (like new columns popping up late)
     // We only track direct children (childList) to prevent infinite loops causing lag
     const observer = new MutationObserver(() => {
-      if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+      if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
         observer.disconnect();
         return;
       }
@@ -225,12 +225,12 @@ function runBookmarklet() {
     observer.observe(row, { childList: true });
     
     // OPTIMIZATION: Track observer instances to prevent memory leaks if script runs multiple times
-    if (window._myedObserver) window._myedObserver.disconnect();
-    window._myedObserver = observer;
+    if (window._btpObserver) window._btpObserver.disconnect();
+    window._btpObserver = observer;
     
     if (window.ResizeObserver) {
       const resizeOb = new ResizeObserver(() => {
-        if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+        if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
           resizeOb.disconnect();
           return;
         }
@@ -238,8 +238,8 @@ function runBookmarklet() {
       });
       resizeOb.observe(row);
       // Clean up previous instances
-      if (window._myedResizeOb) window._myedResizeOb.disconnect();
-      window._myedResizeOb = resizeOb;
+      if (window._btpResizeOb) window._btpResizeOb.disconnect();
+      window._btpResizeOb = resizeOb;
     }
     
     // 5. Synchronized Row Highlighting
@@ -257,8 +257,8 @@ function runBookmarklet() {
       tables.forEach(t => {
         const targetRow = t.rows[idx];
         if (targetRow) {
-          if (isEnter) targetRow.classList.add('myed-row-hover');
-          else targetRow.classList.remove('myed-row-hover');
+          if (isEnter) targetRow.classList.add('btp-row-hover');
+          else targetRow.classList.remove('btp-row-hover');
         }
       });
     }
@@ -281,7 +281,7 @@ function runBookmarklet() {
     */
   let codeTries = 0;
   const CODE_MAX = 25;
-  const ATTENDANCE_ORDER_KEY = 'myed_attendance_column_order';
+  const ATTENDANCE_ORDER_KEY = 'btp_attendance_column_order';
 
   const codeWait = setInterval(() => {
     if (!isContextValid()) {
@@ -307,10 +307,16 @@ function runBookmarklet() {
         found = true;
         clearInterval(codeWait);
 
-        // Load order and apply enhancements
-        chrome.storage.sync.get([ATTENDANCE_ORDER_KEY], (res) => {
+        // Load order and apply enhancements with fallback for migration
+        const OLD_ATTENDANCE_ORDER_KEY = 'myed_attendance_column_order';
+        chrome.storage.sync.get([ATTENDANCE_ORDER_KEY, OLD_ATTENDANCE_ORDER_KEY], (res) => {
           if (!isContextValid()) return;
-          const savedOrder = res[ATTENDANCE_ORDER_KEY];
+          let savedOrder = res[ATTENDANCE_ORDER_KEY];
+          if (savedOrder === undefined && res[OLD_ATTENDANCE_ORDER_KEY] !== undefined) {
+            savedOrder = res[OLD_ATTENDANCE_ORDER_KEY];
+            // Migrate to the new key
+            chrome.storage.sync.set({ [ATTENDANCE_ORDER_KEY]: savedOrder });
+          }
           enhanceAttendanceTable(table, savedOrder);
         });
       }
@@ -382,7 +388,7 @@ function runBookmarklet() {
             
             // Hover Rise Effect
             cell.onmouseenter = () => {
-              if (!window._myedDragActive) {
+              if (!window._btpDragActive) {
                 cell.style.transform = 'translateY(-3px)';
                 cell.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
                 cell.style.backgroundColor = '#e2e8f0';
@@ -390,7 +396,7 @@ function runBookmarklet() {
               }
             };
             cell.onmouseleave = () => {
-              if (!window._myedDragActive) {
+              if (!window._btpDragActive) {
                 cell.style.transform = '';
                 cell.style.boxShadow = '';
                 cell.style.backgroundColor = '#f1f5f9';
@@ -400,7 +406,7 @@ function runBookmarklet() {
 
             // Drag and Drop Listeners
             cell.ondragstart = (e) => {
-              window._myedDragActive = true;
+              window._btpDragActive = true;
               e.dataTransfer.setData('text/plain', idx);
               cell.style.opacity = '0.4';
               cell.style.cursor = 'grabbing';
@@ -411,7 +417,7 @@ function runBookmarklet() {
               cell.style.backgroundColor = '#f1f5f9';
             };
             cell.ondragend = () => {
-              window._myedDragActive = false;
+              window._btpDragActive = false;
               cell.style.opacity = '';
               cell.style.cursor = 'grab';
               cell.style.transform = '';
@@ -425,20 +431,20 @@ function runBookmarklet() {
               const midX = rect.left + rect.width / 2;
               if (e.clientX > midX) {
                 cell.style.boxShadow = 'inset -4px 0 0 0 #3b82f6';
-                cell._myedDropSide = 'right';
+                cell._btpDropSide = 'right';
               } else {
                 cell.style.boxShadow = 'inset 4px 0 0 0 #3b82f6';
-                cell._myedDropSide = 'left';
+                cell._btpDropSide = 'left';
               }
             };
             cell.ondragenter = (e) => e.preventDefault();
             cell.ondragleave = () => {
               cell.style.boxShadow = '';
-              delete cell._myedDropSide;
+              delete cell._btpDropSide;
             };
             cell.ondrop = (e) => {
               e.preventDefault();
-              const side = cell._myedDropSide || 'left';
+              const side = cell._btpDropSide || 'left';
               cell.style.boxShadow = '';
               const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
               const toIdx = idx;
@@ -495,10 +501,10 @@ function runBookmarklet() {
                       if (btnText === 'A') {
                         btn.disabled = true;
                         Object.assign(btn.style, {
-                          opacity: '0.4',
-                          pointerEvents: 'none',
-                          filter: 'grayscale(1)',
-                          cursor: 'not-allowed'
+                           opacity: '0.4',
+                           pointerEvents: 'none',
+                           filter: 'grayscale(1)',
+                           cursor: 'not-allowed'
                         });
                         btn.title = 'Student is already marked Excused (A-E) in Class Attendance.';
                       }
@@ -525,13 +531,13 @@ function runBookmarklet() {
                   }
                 };
                 applyInputBadge(input.value.trim().toUpperCase());
-                if (!input._myedBadgeListener) {
-                  input._myedBadgeListener = true;
+                if (!input._btpBadgeListener) {
+                  input._btpBadgeListener = true;
                   input.addEventListener('input', () => applyInputBadge(input.value.trim().toUpperCase()));
                 }
               } else {
                 // Clear existing badges to prevent "widening" / nesting
-                cell.querySelectorAll('.myed-badge').forEach(b => {
+                cell.querySelectorAll('.btp-badge').forEach(b => {
                   const text = b.textContent;
                   b.parentNode.replaceChild(document.createTextNode(text), b);
                 });
@@ -547,7 +553,7 @@ function runBookmarklet() {
                   const badgeColor = val === 'L' ? '#ffd866' : '#ff6188';
                   const textColor = val === 'L' ? '#d25a00' : '#7c1a3b';
                   const span = document.createElement('span');
-                  span.className = 'myed-badge';
+                  span.className = 'btp-badge';
                   Object.assign(span.style, {
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: '22px', height: '22px', borderRadius: '4px',
@@ -598,13 +604,13 @@ function runBookmarklet() {
     clearInterval(postWait);
 
     // Don't add the badge twice
-    if (document.getElementById('myed-post-status')) return;
+    if (document.getElementById('btp-post-status')) return;
 
     // Check if attendance was already posted
     const alreadyPosted = /posted/i.test(statusNode.textContent);
 
     const badge = document.createElement('span');
-    badge.id = 'myed-post-status';
+    badge.id = 'btp-post-status';
     Object.assign(badge.style, {
       display:        'inline-flex',
       alignItems:     'center',
@@ -634,7 +640,7 @@ function runBookmarklet() {
     }
 
     // Expose so other parts of the script can update the badge
-    window._myedApplyPostedState = applyPostedState;
+    window._btpApplyPostedState = applyPostedState;
 
     // Set initial state from the page's own status element
     applyPostedState(alreadyPosted);
@@ -662,7 +668,7 @@ function runBookmarklet() {
 
   /**
    * ===== PART 5: KEEP ATTENDANCE INPUTS ENABLED =====
-   * After posting, MyEd disables the A/L/P attendance code inputs.
+   * After posting, the portal disables the A/L/P attendance code inputs.
    * This observer watches for the "disabled" attribute being added to any
    * input inside the content area and immediately removes it, so teachers
    * can still switch between A, L, and P without extra clicks.
@@ -676,7 +682,7 @@ function runBookmarklet() {
     });
 
     const disableObserver = new MutationObserver((mutations) => {
-      if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+      if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
         disableObserver.disconnect();
         return;
       }
@@ -697,8 +703,8 @@ function runBookmarklet() {
     });
 
     // Clean up previous instance to prevent memory leaks
-    if (window._myedDisableObserver) window._myedDisableObserver.disconnect();
-    window._myedDisableObserver = disableObserver;
+    if (window._btpDisableObserver) window._btpDisableObserver.disconnect();
+    window._btpDisableObserver = disableObserver;
   }
 }
 
@@ -709,13 +715,13 @@ function runBookmarklet() {
 let lastProcessedStdId = null;
 
 function applyReadOnlyStyles() {
-  if (document.getElementById('myed-readonly-applied')) return;
-  const FONT_SIZE_KEY = 'myed_comment_font_size';
+  if (document.getElementById('btp-readonly-applied')) return;
+  const FONT_SIZE_KEY = 'btp_comment_font_size';
   const pre = document.querySelector('.blobTextReadOnly');
   if (!pre) return;
 
   const marker = document.createElement('div');
-  marker.id = 'myed-readonly-applied';
+  marker.id = 'btp-readonly-applied';
   marker.style.display = 'none';
   document.body.appendChild(marker);
 
@@ -787,9 +793,9 @@ function applyReadOnlyStyles() {
   const cancelBtn = document.getElementById('cancelButton');
   if (cancelBtn) {
     // Add Note Label above the button
-    if (!document.getElementById('myed-readonly-note')) {
+    if (!document.getElementById('btp-readonly-note')) {
       const note = document.createElement('div');
-      note.id = 'myed-readonly-note';
+      note.id = 'btp-readonly-note';
       note.textContent = "This comment is not editable because Report Cards have already been posted.";
       Object.assign(note.style, {
         fontSize: '12px',
@@ -822,15 +828,22 @@ function applyReadOnlyStyles() {
     cancelBtn.onmouseout = () => cancelBtn.style.backgroundColor = '#3b82f6';
   }
 
-  // 5. Apply saved font size and Resize Window
+  // 5. Apply saved font size and Resize Window with backward-compatible fallback
   if (isContextValid()) {
-    chrome.storage.sync.get([FONT_SIZE_KEY], (res) => {
+    const OLD_FONT_SIZE_KEY = 'myed_comment_font_size';
+    chrome.storage.sync.get([FONT_SIZE_KEY, OLD_FONT_SIZE_KEY], (res) => {
       if (isContextValid()) {
-        if (res[FONT_SIZE_KEY]) {
-          const savedSize = res[FONT_SIZE_KEY] + 'px';
-          pre.style.fontSize = savedSize;
+        let savedSize = res[FONT_SIZE_KEY];
+        if (savedSize === undefined && res[OLD_FONT_SIZE_KEY] !== undefined) {
+          savedSize = res[OLD_FONT_SIZE_KEY];
+          // Migrate to the new key
+          chrome.storage.sync.set({ [FONT_SIZE_KEY]: savedSize });
+        }
+        if (savedSize) {
+          const savedSizeStr = savedSize + 'px';
+          pre.style.fontSize = savedSizeStr;
           const studentName = document.querySelector('.detailValue');
-          if (studentName) studentName.style.fontSize = savedSize;
+          if (studentName) studentName.style.fontSize = savedSizeStr;
         }
 
         // Wait for font application and layout to settle before resizing
@@ -863,11 +876,11 @@ function replacePostedPins() {
   const pins = document.querySelectorAll('img[src*="pin-red.gif"]');
   pins.forEach(img => {
     // Only process if we haven't already marked and appended next to this image
-    if (img.dataset.myedPostedMarked === 'true') return;
-    img.dataset.myedPostedMarked = 'true';
+    if (img.dataset.btpPostedMarked === 'true') return;
+    img.dataset.btpPostedMarked = 'true';
 
     const badge = document.createElement('span');
-    badge.className = 'myed-posted-column-badge';
+    badge.className = 'btp-posted-column-badge';
     badge.textContent = 'Posted';
     badge.title = img.title || img.alt || 'Posted';
     
@@ -898,21 +911,21 @@ function replacePostedPins() {
 }
 
 function runBetterGrades() {
-  if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+  if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
 
   // Handle Gradebook Column Pins Replacement
   if (window.location.href.includes('staffGradeInput') || window.location.href.includes('gradebook')) {
     replacePostedPins();
     const pinInterval = setInterval(() => {
-      if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+      if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
         clearInterval(pinInterval);
         return;
       }
       replacePostedPins();
     }, 1000);
     
-    if (window._myedPinInterval) clearInterval(window._myedPinInterval);
-    window._myedPinInterval = pinInterval;
+    if (window._btpPinInterval) clearInterval(window._btpPinInterval);
+    window._btpPinInterval = pinInterval;
     return;
   }
 
@@ -928,13 +941,13 @@ function runBetterGrades() {
   }
 
   const checkAndInject = () => {
-    if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+    if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
     const textArea = document.getElementById('textComment');
     if (!textArea) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     
-    // Look for student ID in hidden inputs (standard in MyEd forms) OR URL
+    // Look for student ID in hidden inputs (standard in forms) OR URL
     const stdInput = document.querySelector('input[name="stdOID"]') || 
                      document.querySelector('input[name="studentOid"]') ||
                      document.querySelector('input[name="std"]');
@@ -943,9 +956,9 @@ function runBetterGrades() {
     if (!stdId) return;
 
     // If student ID changed OR UI is missing (e.g. after AJAX refresh), re-inject
-    const sidebarExists = document.getElementById('myed-grades-sidebar');
+    const sidebarExists = document.getElementById('btp-grades-sidebar');
     if (stdId !== lastProcessedStdId || !sidebarExists) {
-      if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+      if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
       lastProcessedStdId = stdId;
       injectBetterGradesUI(textArea, stdId);
     }
@@ -954,7 +967,7 @@ function runBetterGrades() {
   // Run once and then poll to handle AJAX-based student switching
   checkAndInject();
   const intervalId = setInterval(() => {
-    if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) {
+    if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
       clearInterval(intervalId);
       return;
     }
@@ -962,8 +975,8 @@ function runBetterGrades() {
   }, 1000);
 
   // Store for cleanup
-  if (window._myedGradesInterval) clearInterval(window._myedGradesInterval);
-  window._myedGradesInterval = intervalId;
+  if (window._btpGradesInterval) clearInterval(window._btpGradesInterval);
+  window._btpGradesInterval = intervalId;
 }
 
 function resizePopupToFit() {
@@ -1009,13 +1022,14 @@ function resizePopupToFit() {
 }
 
 function injectBetterGradesUI(textArea, stdId) {
-  if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+  if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
   
   // Clean up any stale UI
-  document.querySelectorAll('.myed-grades-ui').forEach(el => el.remove());
+  document.querySelectorAll('.btp-grades-ui').forEach(el => el.remove());
 
-  const storageKey = `myed_comment_${stdId}`;
-  const FONT_SIZE_KEY = 'myed_comment_font_size';
+  const storageKey = `btp_comment_${stdId}`;
+  const OLD_STORAGE_KEY = `myed_comment_${stdId}`;
+  const FONT_SIZE_KEY = 'btp_comment_font_size';
   const RED = '#ff4757';
   const GREEN = '#2ed573';
   const GREY = '#ccc';
@@ -1023,8 +1037,8 @@ function injectBetterGradesUI(textArea, stdId) {
   // --- LAYOUT ---
   // Create a sidebar to the left of the text area
   const sidebar = document.createElement('div');
-  sidebar.id = 'myed-grades-sidebar';
-  sidebar.className = 'myed-grades-ui';
+  sidebar.id = 'btp-grades-sidebar';
+  sidebar.className = 'btp-grades-ui';
   Object.assign(sidebar.style, {
     display: 'flex',
     flexDirection: 'column',
@@ -1039,8 +1053,8 @@ function injectBetterGradesUI(textArea, stdId) {
   });
 
   const mainFlex = document.createElement('div');
-  mainFlex.id = 'myed-grades-main-flex';
-  mainFlex.className = 'myed-grades-ui';
+  mainFlex.id = 'btp-grades-main-flex';
+  mainFlex.className = 'btp-grades-ui';
   Object.assign(mainFlex.style, {
     display: 'flex',
     width: '100%',
@@ -1221,16 +1235,27 @@ function injectBetterGradesUI(textArea, stdId) {
 
   // --- INITIAL DATA LOAD ---
   if (isContextValid()) {
-    chrome.storage.sync.get([FONT_SIZE_KEY], (res) => {
+    const OLD_FONT_SIZE_KEY = 'myed_comment_font_size';
+    chrome.storage.sync.get([FONT_SIZE_KEY, OLD_FONT_SIZE_KEY], (res) => {
       if (!isContextValid()) return;
-      if (res[FONT_SIZE_KEY]) {
-        textArea.style.fontSize = res[FONT_SIZE_KEY] + 'px';
+      let savedSize = res[FONT_SIZE_KEY];
+      if (savedSize === undefined && res[OLD_FONT_SIZE_KEY] !== undefined) {
+        savedSize = res[OLD_FONT_SIZE_KEY];
+        chrome.storage.sync.set({ [FONT_SIZE_KEY]: savedSize });
+      }
+      if (savedSize) {
+        textArea.style.fontSize = savedSize + 'px';
       }
 
-      chrome.storage.local.get([storageKey], (result) => {
+      chrome.storage.local.get([storageKey, OLD_STORAGE_KEY], (result) => {
         if (!isContextValid()) return;
-        if (result[storageKey] !== undefined && result[storageKey] !== textArea.value) {
-          textArea.value = result[storageKey];
+        let savedVal = result[storageKey];
+        if (savedVal === undefined && result[OLD_STORAGE_KEY] !== undefined) {
+          savedVal = result[OLD_STORAGE_KEY];
+          chrome.storage.local.set({ [storageKey]: savedVal });
+        }
+        if (savedVal !== undefined && savedVal !== textArea.value) {
+          textArea.value = savedVal;
           updateUI('draft');
         } else {
           updateUI('posted');
@@ -1242,12 +1267,12 @@ function injectBetterGradesUI(textArea, stdId) {
 
   // --- LISTENERS ---
   // Only attach listeners once per textArea element
-  if (textArea._myedGradesListenersAttached) return;
-  textArea._myedGradesListenersAttached = true;
+  if (textArea._btpGradesListenersAttached) return;
+  textArea._btpGradesListenersAttached = true;
 
   let timeoutId = null;
   textArea.addEventListener('input', () => {
-    if (!isContextValid() || window._betterMyEdLastScriptId !== currentScriptId) return;
+    if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
     updateUI('typing');
 
     // Auto-adjust textarea height while typing
@@ -1267,7 +1292,7 @@ function injectBetterGradesUI(textArea, stdId) {
 
   const clearStorage = () => {
     if (!isContextValid()) return;
-    chrome.storage.local.remove(storageKey);
+    chrome.storage.local.remove([storageKey, OLD_STORAGE_KEY]);
     updateUI('posted');
   };
 
@@ -1283,13 +1308,13 @@ function injectBetterGradesUI(textArea, stdId) {
  */
 // Ensure script features don't get accidentally duplicated while allowing new versions to run
 const currentScriptId = Math.random().toString(36).substring(2, 9);
-window._betterMyEdLastScriptId = currentScriptId;
+window._betterTeacherPortalLastScriptId = currentScriptId;
 
 function showFirstRunOverlay() {
-  if (document.getElementById('better-myed-onboarding')) return;
+  if (document.getElementById('better-teacher-portal-onboarding')) return;
 
   const overlay = document.createElement('div');
-  overlay.id = 'better-myed-onboarding';
+  overlay.id = 'better-teacher-portal-onboarding';
   Object.assign(overlay.style, {
     position: 'fixed',
     top: '0',
@@ -1322,9 +1347,9 @@ function showFirstRunOverlay() {
   });
 
   modal.innerHTML = `
-    <h2 style="margin-top: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Better MyEd is Ready! ✨</h2>
+    <h2 style="margin-top: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Better Teacher Portal is Ready! ✨</h2>
     <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Welcome to your enhanced MyEducation experience.<br>All the features and now enabled for you!
+      Welcome to your enhanced portal experience.<br>All the features are now enabled for you!
     </p>
     <div style="text-align: left; background: #f1f5f9; padding: 20px; border-radius: 16px; margin-bottom: 24px; box-sizing: border-box;">
       <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; box-sizing: border-box;">
@@ -1374,13 +1399,13 @@ function showFirstRunOverlay() {
   };
 }
 
-function initBetterMyEd() {
+function initBetterTeacherPortal() {
   if (!isContextValid()) return;
   
   chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades', 'firstRun'], (result) => {
     if (!isContextValid()) return;
     // If a newer script has started, this one should stop
-    if (window._betterMyEdLastScriptId !== currentScriptId) return;
+    if (window._betterTeacherPortalLastScriptId !== currentScriptId) return;
 
     if (result.firstRun) {
       showFirstRunOverlay();
@@ -1400,7 +1425,7 @@ function initBetterMyEd() {
           document.removeEventListener('click', celebrationListener);
           return;
         }
-        if (window._betterMyEdLastScriptId !== currentScriptId) {
+        if (window._betterTeacherPortalLastScriptId !== currentScriptId) {
           document.removeEventListener('click', celebrationListener);
           return;
         }
@@ -1423,10 +1448,10 @@ function initBetterMyEd() {
       };
 
       // Clean up previous listener if it exists
-      if (window._myedCelebrationListener) {
-        document.removeEventListener('click', window._myedCelebrationListener);
+      if (window._btpCelebrationListener) {
+        document.removeEventListener('click', window._btpCelebrationListener);
       }
-      window._myedCelebrationListener = celebrationListener;
+      window._btpCelebrationListener = celebrationListener;
       document.addEventListener('click', celebrationListener);
     }
 
@@ -1440,5 +1465,5 @@ function initBetterMyEd() {
   });
 }
 
-initBetterMyEd();
+initBetterTeacherPortal();
 })();

@@ -1,10 +1,6 @@
-# Better MyEd ![Better MyEd Icon](icon48.png)
+# Better Teacher Portal ![Better Teacher Portal Icon](icon48.png)
 
-**Better MyEd** is a simple Chrome Extension that makes the MyEducation BC (MyEd) website much easier to use by improving the location of buttons and layout of data.
-
----
-
-
+**Better Teacher Portal** is a simple Chrome Extension that makes the student information portal used by teachers in BC much easier to use by improving the location of buttons and layout of data.
 
 ---
 
@@ -18,10 +14,10 @@
 - **Improved Row Highlighting**: Adds a subtle row-highlight effect when hovering over data rows.
 - **Closer Columns**: Column widths have been reduced to make it easier to read data across rows.
 - **Frozen Layouts in Trends**: In Trends, attendance totals now appear next to student names and these columns are frozen to allow for scrolling without losing sight of these fields.
-- **Better Grades (Draft Protection)**: Automatically saves report card comments to your browser as you type. If MyEd crashes or logs you out, your work is recovered instantly the next time you open that student's comment box. All controls and status indicators are unified in a sleek sidebar to the left of your writing area.
+- **Better Grades (Draft Protection)**: Automatically saves report card comments to your browser as you type. If the portal crashes or logs you out, your work is recovered instantly the next time you open that student's comment box. All controls and status indicators are unified in a sleek sidebar to the left of your writing area.
 - **Adjustable Font Size**: Includes convenient + and - controls in the report card comment sidebar so you can set a comfortable reading size that persists across all comment boxes.
 - **Better Celebrate**: A fun, optional toggle that triggers a burst of confetti whenever you successfully click "Post" or "Post Grades..." — because checking off administrative chores deserves a small celebration!
-- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into MyEducation BC. Settings auto-save in your browser.
+- **Automatic Setup**: Once installed, it works quietly in the background whenever you log into the portal. Settings auto-save in your browser.
 - **Simple Controls**: You can easily turn features on or off at any time using the controls from the extension icon.
 - **Secure and Private**: Only the layout and styles of the site are enhanced - no data leaves your browser.
 

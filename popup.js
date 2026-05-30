@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusEl = document.getElementById('statusMessage');
   const tipBtn = document.getElementById('tipBtn');
 
-  const MYED_PATTERN = "https://*.myeducation.gov.bc.ca/*";
+  const PORTAL_PATTERN = "https://*.myeducation.gov.bc.ca/*";
 
   // Open Ko-Fi in a new tab
   tipBtn.addEventListener('click', () => {
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (showAttendance || celebrationMode || betterGrades) {
       // Request specific host permission
-      chrome.permissions.request({ origins: [MYED_PATTERN] }, async (granted) => {
+      chrome.permissions.request({ origins: [PORTAL_PATTERN] }, async (granted) => {
         if (granted) {
           await registerScript();
           chrome.storage.sync.set({ showAttendance, celebrationMode, betterGrades });
@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
               }).catch(err => console.log("Already injected or wrong page:", err));
               
               statusEl.style.color = '#27ae60';
-              statusEl.innerText = "Enabled! Refreshing MyEd...";
+              statusEl.innerText = "Enabled! Refreshing Portal...";
               setTimeout(() => {
                 chrome.tabs.reload(tabs[0].id);
               }, 1000);
             } else {
               statusEl.style.color = '#27ae60';
-              statusEl.innerText = "Enabled! Open MyEd to see changes.";
+              statusEl.innerText = "Enabled! Open Portal to see changes.";
             }
           });
         } else {

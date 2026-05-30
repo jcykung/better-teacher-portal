@@ -1,15 +1,15 @@
-const MYED_PATTERN = "https://*.myeducation.gov.bc.ca/*";
+const PORTAL_PATTERN = "https://*.myeducation.gov.bc.ca/*";
 
-async function registerBetterMyEdScripts() {
+async function registerScripts() {
   try {
     const scripts = await chrome.scripting.getRegisteredContentScripts();
-    if (scripts.some(s => s.id === 'better-myed-script')) {
-      await chrome.scripting.unregisterContentScripts({ ids: ['better-myed-script'] });
+    if (scripts.some(s => s.id === 'better-teacher-portal-script')) {
+      await chrome.scripting.unregisterContentScripts({ ids: ['better-teacher-portal-script'] });
     }
     await chrome.scripting.registerContentScripts([{
-      id: 'better-myed-script',
+      id: 'better-teacher-portal-script',
       js: ['canvas-confetti.js', 'content.js'],
-      matches: [MYED_PATTERN],
+      matches: [PORTAL_PATTERN],
       runAt: 'document_idle',
       allFrames: true
     }]);
@@ -19,9 +19,9 @@ async function registerBetterMyEdScripts() {
   }
 }
 
-async function unregisterBetterMyEdScripts() {
+async function unregisterScripts() {
   try {
-    await chrome.scripting.unregisterContentScripts({ ids: ['better-myed-script'] });
+    await chrome.scripting.unregisterContentScripts({ ids: ['better-teacher-portal-script'] });
     console.log("Scripts unregistered successfully.");
   } catch (err) {
     console.error("Failed to unregister scripts:", err);
@@ -41,10 +41,10 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // On update, re-register scripts if features are enabled
     chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], async (result) => {
       if (result.showAttendance !== false || result.celebrationMode !== false || result.betterGrades !== false) {
-        await registerBetterMyEdScripts();
+        await registerScripts();
         
         // Hot Injection: Inject into existing tabs
-        const tabs = await chrome.tabs.query({ url: MYED_PATTERN });
+        const tabs = await chrome.tabs.query({ url: PORTAL_PATTERN });
         for (const tab of tabs) {
           chrome.scripting.executeScript({
             target: { tabId: tab.id, allFrames: true },
@@ -58,20 +58,19 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'checkPermissions') {
-    chrome.permissions.contains({ origins: [MYED_PATTERN] }, (result) => {
+    chrome.permissions.contains({ origins: [PORTAL_PATTERN] }, (result) => {
       sendResponse({ hasPermission: result });
     });
     return true;
   }
   
   if (request.action === 'registerScripts') {
-    registerBetterMyEdScripts().then(() => sendResponse({ success: true }));
+    registerScripts().then(() => sendResponse({ success: true }));
     return true;
   }
 
   if (request.action === 'unregisterScripts') {
-    unregisterBetterMyEdScripts().then(() => sendResponse({ success: true }));
+    unregisterScripts().then(() => sendResponse({ success: true }));
     return true;
   }
 });
-

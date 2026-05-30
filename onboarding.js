@@ -3,11 +3,11 @@ const launchBtn = document.getElementById('launchBtn');
 const mainState = document.getElementById('main-state');
 const successState = document.getElementById('success-state');
 
-const MYED_PATTERN = "https://*.myeducation.gov.bc.ca/*";
+const PORTAL_PATTERN = "https://*.myeducation.gov.bc.ca/*";
 
 enableBtn.addEventListener('click', () => {
     chrome.permissions.request({
-        origins: [MYED_PATTERN]
+        origins: [PORTAL_PATTERN]
     }, (granted) => {
         if (granted) {
             // Register scripts via background script
@@ -18,12 +18,12 @@ enableBtn.addEventListener('click', () => {
             mainState.style.display = 'none';
             successState.style.display = 'block';
 
-            // Refresh existing MyEd tabs to apply changes immediately
-            chrome.tabs.query({ url: MYED_PATTERN }, (tabs) => {
+            // Refresh existing portal tabs to apply changes immediately
+            chrome.tabs.query({ url: PORTAL_PATTERN }, (tabs) => {
                 tabs.forEach(tab => chrome.tabs.reload(tab.id));
             });
         } else {
-            alert('Better MyEd needs permission to run on MyEducation BC to function. Please try again!');
+            alert('Better Teacher Portal needs permission to run on the student information portal to function. Please try again!');
         }
     });
 });

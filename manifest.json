@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Better MyEd",
-  "version": "2.7",
-  "description": "Improves the layout and usability of the BC MyEducation portal.",
+  "name": "Better Teacher Portal",
+  "version": "2.8",
+  "description": "Improves the layout and usability of the student information portal used by teachers in BC.",
   "permissions": ["storage", "scripting", "activeTab"],
   "optional_host_permissions": [
     "https://*.myeducation.gov.bc.ca/*"
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Better MyEd",
+    "default_title": "Better Teacher Portal",
     "default_icon": {
       "16": "icon16.png",
       "48": "icon48.png",
