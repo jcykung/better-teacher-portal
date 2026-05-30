@@ -8,7 +8,7 @@
     />
     <style>
       body {
-        width: 280px;
+        width: 360px;
         margin: 0;
         font-family: "Inter", sans-serif;
         background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
@@ -39,6 +39,7 @@
         font-weight: 600;
         color: #2c3e50;
         letter-spacing: -0.3px;
+        white-space: nowrap;
       }
       .header-text {
         display: flex;
@@ -78,18 +79,62 @@
         gap: 6px;
       }
       .info-icon {
+        position: relative;
         display: inline-block;
         width: 18px;
         height: 18px;
-        /* Lucide Info SVG encoded as a Data URI */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234b6584' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+        /* Lucide Help (Question Circle) SVG encoded as a Data URI */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234b6584' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-size: contain;
         cursor: help;
-        transition: opacity 0.2s ease;
       }
-      .info-icon:hover {
-        opacity: 0.8;
+
+      /* CSS Custom Tooltip Bubble */
+      .info-icon::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 130%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: #212529;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+        width: 200px;
+        text-align: left;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 100;
+        white-space: normal;
+      }
+
+      /* CSS Custom Tooltip Arrow */
+      .info-icon::before {
+        content: "";
+        position: absolute;
+        bottom: 115%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        border-width: 6px 6px 0 6px;
+        border-style: solid;
+        border-color: #212529 transparent transparent transparent;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 100;
+      }
+
+      /* Hover Trigger */
+      .info-icon:hover::after,
+      .info-icon:hover::before {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
       }
 
       /* Toggle Switch Styles */
@@ -218,7 +263,7 @@
         Better Attendance
         <span
           class="info-icon"
-          title="Shows attendance buttons and first names more prominently and next to each other. In 'Trends', shows attendance totals next to student names."
+          data-tooltip="Shows attendance buttons and first names more prominently and next to each other. In 'Trends', shows attendance totals next to student names."
         ></span>
       </div>
       <label class="switch">
@@ -231,7 +276,7 @@
         Better Celebrate
         <span
           class="info-icon"
-          title="Generates a burst of confetti when you submit Attendance or Marks - celebrate the small victories!"
+          data-tooltip="Generates a burst of confetti when you submit Attendance or Marks - celebrate the small victories!"
         ></span>
       </div>
       <label class="switch">
@@ -244,7 +289,7 @@
         Better Grades
         <span
           class="info-icon"
-          title="Auto-saves report card comments while typing to prevent loss on timeout or crash."
+          data-tooltip="Auto-saves report card comments while typing to prevent loss on timeout or crash."
         ></span>
       </div>
       <label class="switch">
