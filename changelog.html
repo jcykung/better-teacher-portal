@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Changelog - Better Teacher Portal</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --success: #10b981;
+        --bg: #f8fafc;
+        --text: #1e293b;
+        --text-light: #64748b;
+        --card-bg: rgba(255, 255, 255, 0.95);
+        --border: #e2e8f0;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 40px 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+
+      .container {
+        max-width: 680px;
+        width: 90%;
+        background: var(--card-bg);
+        padding: 40px;
+        border-radius: 24px;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.05),
+          0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        text-align: center;
+        transform: translateY(20px);
+        opacity: 0;
+        animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes fadeIn {
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 16px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        color: var(--text-light);
+        margin-bottom: 32px;
+        font-weight: 500;
+      }
+
+      /* Timeline styling */
+      .timeline {
+        position: relative;
+        margin: 40px 0;
+        padding: 0;
+        list-style: none;
+        text-align: left;
+      }
+
+      .timeline::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        left: 20px;
+        width: 2px;
+        background: var(--border);
+        border-radius: 1px;
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 32px;
+        padding-left: 56px;
+      }
+
+      .timeline-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-dot {
+        position: absolute;
+        top: 2px;
+        left: 11px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid var(--primary);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        z-index: 2;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .timeline-item:hover .timeline-dot {
+        transform: scale(1.2);
+      }
+
+      .timeline-item.latest .timeline-dot {
+        border-color: var(--success);
+        background: var(--success);
+      }
+
+      .timeline-item.latest .timeline-dot::after {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 3px solid var(--success);
+        animation: pulse 2s infinite;
+        opacity: 0.6;
+        z-index: -1;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.6;
+        }
+        70% {
+          transform: scale(1.6);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1.6);
+          opacity: 0;
+        }
+      }
+
+      .timeline-content {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .timeline-content:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border-color: #cbd5e1;
+      }
+
+      .timeline-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .version-tag {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .badge-latest {
+        background: #dcfce7;
+        color: #15803d;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .timeline-features {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-light);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .timeline-features li {
+        margin-bottom: 8px;
+      }
+
+      .timeline-features li:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-features strong {
+        color: var(--text);
+      }
+
+      /* Buttons */
+      .action-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 40px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+      }
+
+      .btn:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px -3px rgba(59, 130, 246, 0.4);
+      }
+
+      .tip-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 24px;
+        background: #ff5e5b;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.15s ease;
+        box-shadow: 0 4px 6px -1px rgba(255, 94, 91, 0.3);
+        text-decoration: none;
+      }
+
+      .tip-btn:hover {
+        background: #e04e4b;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px -3px rgba(255, 94, 91, 0.4);
+      }
+
+      .tip-btn svg {
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="icon128.png" alt="Better Teacher Portal Logo" class="logo" />
+      <h1>Better Teacher Portal</h1>
+      <div class="subtitle">Version Changelog</div>
+
+      <ul class="timeline">
+        <!-- v2.9 -->
+        <li class="timeline-item latest">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.9</span>
+              <span class="badge-latest">Latest</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Email Page Exclusion:</strong> Disabled script execution and custom styles on mass email pages (<code>massEmail.do</code>) to prevent visual layout breakage.
+              </li>
+              <li>
+                <strong>Version Changelog:</strong> Added this interactive timeline to display historical version updates, accessible by clicking the version number in the extension popup.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.8 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.8</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Popup Enhancements:</strong> Widened the popup dashboard interface to improve text wrapping and general readability.
+              </li>
+              <li>
+                <strong>Settings Tooltips:</strong> Implemented customizable CSS info tooltips for all setting switches to explain what they control.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.7 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.7</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Red Pin Badges:</strong> Converted static red pin images in Gradebook columns into beautiful, responsive "Posted" status badges.
+              </li>
+              <li>
+                <strong>Auto-Resizing Comment Popups:</strong> Added support for auto-resizing comment editor windows to perfectly fit contents and avoid double scrollbars.
+              </li>
+              <li>
+                <strong>Hover Highlights:</strong> Integrated row hover state highlights across all tables to assist with data entry.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.6 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.6</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Logo Refinement:</strong> Swapped generic icons with our custom BTP leafy logo design in onboarding screens and extensions menu.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.5 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.5</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Hot Injection:</strong> Shifted script loading to the service worker to automatically re-inject enhancements into existing tabs without requiring a page reload.
+              </li>
+              <li>
+                <strong>Ko-fi Support:</strong> Added a quick-link tip button to settings and welcome page.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.2 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.2</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Popup Styling:</strong> Created a responsive layout for settings on low screen resolutions.
+              </li>
+              <li>
+                <strong>Table Borders:</strong> Enhanced the borders and grids in lists for better structural readability.
+              </li>
+              <li>
+                <strong>Readonly Comment Labels:</strong> Added clear informative notices to the comment editor for posted comments.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v2.0 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v2.0</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Column Drag & Drop:</strong> Enables interactive column reordering on the main attendance grid. Column setups are automatically persisted in user storage.
+              </li>
+              <li>
+                <strong>Excused Attendance Safeguard:</strong> Prevents redundant clicks by automatically graying out and disabling "Absent" buttons for students already marked Excused in Class Attendance.
+              </li>
+              <li>
+                <strong>Observer Optimization:</strong> Enhanced the lifecycle of background and page mutation observers to prevent memory leaks and redundant calls.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v1.5 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v1.5</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Grades Draft Protection:</strong> Captures typed comments in report card inputs and saves them locally, protecting your work from timeout or crash loss.
+              </li>
+              <li>
+                <strong>Sync Indicators:</strong> Injected a custom sidebar with font controls, a typing indicator, and sync status checks.
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- v1.4 -->
+        <li class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="version-tag">v1.4</span>
+            </div>
+            <ul class="timeline-features">
+              <li>
+                <strong>Celebration Mode:</strong> Implemented a beautiful burst of confetti when clicking "Post" or "Post Grades..." to celebrate attendance and grading submissions.
+              </li>
+              <li>
+                <strong>Sticky Columns:</strong> Locked the student name column to the left of the table during horizontal scroll for easier data entry.
+              </li>
+              <li>
+                <strong>Name Formatters:</strong> Re-formatted raw student names to display first names in bold for quicker visual navigation.
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+
+      <div class="action-row">
+        <button id="closeBtn" class="btn">Close Changelog</button>
+        <button class="tip-btn idTipBtn">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <g transform="scale(0.09)">
+              <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <path
+                  d="M 35.982 81.106 c -13.1 0 -23.756 -5.859 -30.002 -16.498 C 0.451 55.282 0 45.181 0 33.895 c 0 -6.691 2.013 -12.517 5.819 -16.849 c 3.497 -3.979 8.453 -6.556 13.956 -7.258 c 6.532 -0.828 14.654 -0.896 23.097 -0.896 c 13.74 0 17.622 0.168 23.028 0.709 c 7.192 0.714 13.243 3.398 17.496 7.763 C 87.717 21.798 90 27.718 90 34.492 v 1.361 c 0 11.559 -7.727 21.233 -18.497 23.863 c -0.804 1.897 -1.8 3.784 -2.978 5.643 l -0.031 0.047 C 64.7 71.271 55.782 81.108 38.701 81.108 h -2.722 L 35.982 81.106 z"
+                  fill="#fff"
+                />
+                <path
+                  d="M 65.336 15.261 c -5.105 -0.51 -8.678 -0.681 -22.462 -0.681 c -8.849 0 -16.337 0.085 -22.376 0.851 c -7.998 1.022 -14.805 7.147 -14.805 18.464 c 0 11.317 0.595 20.081 5.19 27.823 c 5.19 8.849 13.869 13.698 25.101 13.698 h 2.722 c 13.783 0 21.271 -7.317 25.015 -13.103 c 1.617 -2.554 2.807 -5.105 3.573 -7.659 c 9.785 -0.851 17.017 -8.934 17.017 -18.803 v -1.361 c 0 -10.634 -6.976 -18.037 -18.974 -19.23 H 65.336 z"
+                  fill="#fff"
+                />
+                <path
+                  d="M 5.691 33.895 c 0 -11.317 6.807 -17.442 14.805 -18.464 c 6.042 -0.766 13.53 -0.851 22.376 -0.851 c 13.783 0 17.356 0.171 22.461 0.681 c 11.998 1.19 18.974 8.593 18.974 19.23 v 1.361 c 0 9.871 -7.232 17.954 -17.017 18.803 c -0.766 2.554 -1.956 5.105 -3.573 7.659 c -3.744 5.785 -11.232 13.103 -25.015 13.103 H 35.98 c -11.232 0 -19.91 -4.849 -25.101 -13.698 c -4.595 -7.742 -5.19 -16.337 -5.19 -27.823"
+                  fill="#202020"
+                />
+                <path
+                  d="M 12.071 33.98 c 0 10.976 0.681 18.037 4.254 24.589 c 4.083 7.573 11.486 10.466 19.91 10.466 h 2.636 c 11.062 0 16.422 -5.361 19.401 -10.04 c 1.446 -2.383 2.722 -5.019 3.403 -8.339 l 0.51 -2.127 h 3.064 c 6.807 0 12.678 -5.529 12.678 -12.593 V 34.66 c 0 -7.912 -4.934 -12.083 -13.529 -13.103 c -4.849 -0.424 -7.742 -0.595 -21.527 -0.595 c -9.274 0 -15.91 0.085 -20.93 0.851 c -7.061 1.022 -9.871 5.02 -9.871 12.166"
+                  fill="#fff"
+                />
+                <path
+                  d="M 62.188 39.85 c 0 1.022 0.766 1.788 2.127 1.788 c 4.339 0 6.722 -2.468 6.722 -6.551 s -2.383 -6.637 -6.722 -6.637 c -1.361 0 -2.127 0.766 -2.127 1.788 v 9.615 V 39.85 z"
+                  fill="#202020"
+                />
+                <path
+                  d="M 20.411 39.338 c 0 5.02 2.807 9.359 6.381 12.764 c 2.383 2.298 6.127 4.681 8.678 6.212 c 0.766 0.425 1.532 0.681 2.383 0.681 c 1.022 0 1.871 -0.256 2.554 -0.681 c 2.554 -1.532 6.295 -3.914 8.593 -6.212 c 3.659 -3.403 6.466 -7.742 6.466 -12.764 c 0 -5.446 -4.083 -10.295 -9.954 -10.295 c -3.488 0 -5.871 1.788 -7.659 4.254 c -1.617 -2.468 -4.083 -4.254 -7.573 -4.254 c -5.956 0 -9.871 4.849 -9.871 10.295"
+                  fill="#ff5a16"
+                />
+              </g>
+            </g>
+          </svg>
+          Tip Me
+        </button>
+      </div>
+    </div>
+
+    <script src="changelog.js"></script>
+  </body>
+</html>

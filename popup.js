@@ -108,14 +108,30 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleGrades.addEventListener('change', handleToggleChange);
 
   // Set version number
-  const versionEl = document.createElement('div');
+  const versionEl = document.createElement('a');
+  versionEl.href = '#';
   versionEl.textContent = `v. ${chrome.runtime.getManifest().version}`;
   Object.assign(versionEl.style, {
     position: 'absolute',
     bottom: '8px',
     right: '12px',
     fontSize: '9px',
-    color: '#95a5a6'
+    color: '#95a5a6',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition: 'color 0.2s ease, text-decoration 0.2s ease'
+  });
+  versionEl.addEventListener('mouseenter', () => {
+    versionEl.style.color = '#3b82f6';
+    versionEl.style.textDecoration = 'underline';
+  });
+  versionEl.addEventListener('mouseleave', () => {
+    versionEl.style.color = '#95a5a6';
+    versionEl.style.textDecoration = 'none';
+  });
+  versionEl.addEventListener('click', (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: 'changelog.html' });
   });
   document.body.appendChild(versionEl);
 });

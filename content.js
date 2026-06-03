@@ -1,4 +1,10 @@
 (function() {
+// Do not execute any scripts or inject styles on mass email pages
+const currentUrl = window.location.href || '';
+if (currentUrl.includes('massEmail.do') || currentUrl.includes('studentMassEmail.do')) {
+  return;
+}
+
 // Helper to check if the extension context is still valid
 function isContextValid() {
   try {
@@ -9,10 +15,6 @@ function isContextValid() {
 }
 
 function runBookmarklet() {
-  // Do not run on specific popups where layout is easily broken
-  if (window.location.href.includes('studentMassEmail.do')) {
-    return;
-  }
 
   /** 
    * ===== PART 1: GLOBAL FIXES =====

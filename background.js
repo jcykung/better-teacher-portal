@@ -38,6 +38,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     });
     chrome.tabs.create({ url: 'onboarding.html' });
   } else if (details.reason === 'update') {
+    // Automatically open the changelog page on update
+    chrome.tabs.create({ url: 'changelog.html' });
+
     // On update, re-register scripts if features are enabled
     chrome.storage.sync.get(['showAttendance', 'celebrationMode', 'betterGrades'], async (result) => {
       if (result.showAttendance !== false || result.celebrationMode !== false || result.betterGrades !== false) {
