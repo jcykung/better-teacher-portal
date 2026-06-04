@@ -6,12 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Tip Me button click handler
-  document.querySelectorAll('.idTipBtn').forEach(btn => {
+// Tip Me functionality
+document.querySelectorAll('.tipBtn').forEach(btn => {
     btn.addEventListener('click', () => {
-      chrome.tabs.create({ url: 'https://ko-fi.com/coolpuddytat' });
+        chrome.tabs.create({ url: 'https://ko-fi.com/coolpuddytat' });
     });
-  });
+});
 
   // Confetti from latest update dot
   const latestDot = document.querySelector('.timeline-item.latest .timeline-dot');
