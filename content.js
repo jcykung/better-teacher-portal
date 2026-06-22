@@ -1538,36 +1538,35 @@ function injectBetterGradesUI(textArea, stdId) {
         const shortcutText = isMac ? 'CMD + Return' : 'CTRL + Enter';
         btn.title = `Save and go to next record (${shortcutText})`;
 
-        // Insert shortcut hint directly underneath the button using an inline-block span wrapper
-        let wrapper = btn.parentNode;
-        if (!wrapper.classList.contains('btp-btn-wrapper')) {
-          wrapper = document.createElement('span');
-          wrapper.className = 'btp-btn-wrapper';
-          Object.assign(wrapper.style, {
-            display: 'inline-block',
-            position: 'relative'
+        // Append hint to document.body positioned absolutely under the button.
+        // This avoids all parent overflow clipping and doesn't wrap/move the button.
+        if (!document.getElementById('btp-save-next-hint')) {
+          const hint = document.createElement('div');
+          hint.id = 'btp-save-next-hint';
+          hint.className = 'btp-grades-ui';
+          hint.textContent = shortcutText;
+          Object.assign(hint.style, {
+            position: 'absolute',
+            fontSize: '11px',
+            color: '#475569',
+            fontWeight: '600',
+            fontFamily: '"Inter", -apple-system, sans-serif',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: '9999'
           });
-          btn.parentNode.insertBefore(wrapper, btn);
-          wrapper.appendChild(btn);
-        }
+          document.body.appendChild(hint);
 
-        const hint = document.createElement('span');
-        hint.id = 'btp-save-next-hint';
-        hint.className = 'btp-grades-ui';
-        hint.textContent = shortcutText;
-        Object.assign(hint.style, {
-          position: 'absolute',
-          top: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '11px',
-          color: '#475569',
-          marginTop: '4px',
-          fontWeight: '600',
-          fontFamily: '"Inter", -apple-system, sans-serif'
-        });
-        wrapper.appendChild(hint);
+          const positionHint = () => {
+            const rect = btn.getBoundingClientRect();
+            hint.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+            hint.style.left = (rect.left + window.scrollX + rect.width / 2 - hint.offsetWidth / 2) + 'px';
+          };
+          positionHint();
+          // Re-position after popup resize settles
+          setTimeout(positionHint, 100);
+          setTimeout(positionHint, 300);
+        }
       }
     }
   });
