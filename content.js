@@ -19,12 +19,11 @@ function runBookmarklet() {
   /** 
    * ===== PART 1: GLOBAL FIXES =====
    * These run immediately across all tables on the page.
-   * 1. Injects global hover states for data rows
+   * 1. Injects global hover states for data rows and responsiveness overrides
    * 2. Adds horizontal scrolling for wide tables
    * 3. Makes the first column (usually Names) sticky so it stays visible while scrolling
    */
   // 1. Inject custom CSS styles globally. We check if it exists so we don't accidentally add it twice.
-  // Feel free to change the RGBA values below to customize the hover color!
   if(!document.getElementById('btp-global-hover')){
     const hoverStyle = document.createElement('style');
     hoverStyle.id = 'btp-global-hover';
@@ -32,9 +31,53 @@ function runBookmarklet() {
       table tbody tr.listCell:hover td, table tbody tr.listCellAlt:hover td {
         box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.07) !important;
       }
+      /* Global responsiveness: ensure the page itself is scrollable */
+      html, body {
+        overflow-x: auto !important;
+        min-width: 0 !important;
+      }
+      /* Global responsiveness fixes for Aspen layout wrappers */
+      #navigationTable,
+      #headerTable,
+      #pageWidth,
+      .pageWidth,
+      #contentArea,
+      #mainTable,
+      #pageTable {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      /* Ensure nested cell contents wrap rather than overflow */
+      #navigationTable td,
+      #headerTable td,
+      #mainTable td,
+      #pageTable td {
+        max-width: 100vw !important;
+      }
     `;
     document.head.appendChild(hoverStyle);
   }
+
+  // 1.5 Make all fixed-width layout containers responsive dynamically
+  document.querySelectorAll('table, div').forEach(el => {
+    // Skip data tables to ensure they preserve their columns for scrolling
+    if (el.tagName === 'TABLE' && el.querySelector('tr.listCell, tr.listCellAlt')) {
+      return;
+    }
+    
+    const widthAttr = el.getAttribute('width');
+    const hasFixedWidthAttr = widthAttr && !widthAttr.includes('%') && parseInt(widthAttr, 10) > 400;
+    
+    const inlineWidth = el.style.width;
+    const hasFixedInlineWidth = inlineWidth && inlineWidth.endsWith('px') && parseInt(inlineWidth, 10) > 400;
+    
+    if (hasFixedWidthAttr || hasFixedInlineWidth) {
+      el.style.setProperty('width', '100%', 'important');
+      el.style.setProperty('max-width', '100%', 'important');
+      el.style.setProperty('box-sizing', 'border-box', 'important');
+    }
+  });
 
   document.querySelectorAll('div,table').forEach(c=>{
     if(c.scrollWidth > c.clientWidth){
@@ -873,19 +916,53 @@ function applyReadOnlyStyles() {
   }
 }
 
-function replacePostedPins() {
-  if (!isContextValid()) return;
-  const pins = document.querySelectorAll('img[src*="pin-red.gif"]');
-  pins.forEach(img => {
-    // Only process if we haven't already marked and appended next to this image
-    if (img.dataset.btpPostedMarked === 'true') return;
-    img.dataset.btpPostedMarked = 'true';
+function getStorageKey(url = window.location.href) {
+  try {
+    const match = url.match(/[?&](sectionOid|sectionId|oid|stdOid|studentOid)=([^&]+)/i);
+    const identifier = match ? match[2] : 'default';
+    return `btp_grades_edited_${identifier}`;
+  } catch (e) {
+    return 'btp_grades_edited_default';
+  }
+}
 
-    const badge = document.createElement('span');
-    badge.className = 'btp-posted-column-badge';
-    badge.textContent = 'Posted';
-    badge.title = img.title || img.alt || 'Posted';
-    
+function getGradesEdited() {
+  try {
+    const key = getStorageKey();
+    return localStorage.getItem(key) === 'true';
+  } catch (e) {
+    return !!window._btpGradesEdited;
+  }
+}
+
+function setGradesEdited(value) {
+  try {
+    const key = getStorageKey();
+    localStorage.setItem(key, value ? 'true' : 'false');
+  } catch (e) {}
+  window._btpGradesEdited = value;
+}
+
+function replacePostedPins(hasEdits = false) {
+  if (!isContextValid()) return;
+  const pins = document.querySelectorAll('img[src*="pin-red.gif"], img[src*="pin-green.gif"]');
+  pins.forEach(img => {
+    // Hide the original pushpin image
+    img.style.display = 'none';
+
+    // Get or create the badge element
+    let badge = img._btpBadge;
+    if (!badge || !document.body.contains(badge)) {
+      badge = document.createElement('span');
+      badge.className = 'btp-posted-column-badge';
+      img.parentNode.insertBefore(badge, img.nextSibling);
+      img._btpBadge = badge;
+    }
+
+    const isPosted = img.src.includes('pin-red.gif') && !hasEdits;
+    badge.textContent = isPosted ? 'Posted' : 'Not Posted';
+    badge.title = isPosted ? (img.title || img.alt || 'Posted') : 'Changes exist or grades are not posted';
+
     Object.assign(badge.style, {
       display: 'inline-flex',
       alignItems: 'center',
@@ -895,35 +972,145 @@ function replacePostedPins() {
       fontSize: '9px',
       fontWeight: 'bold',
       fontFamily: '"Inter", -apple-system, sans-serif',
-      backgroundColor: '#dcfce7',
-      color: '#166534',
-      border: '1px solid #bbf7d0',
       textTransform: 'uppercase',
       letterSpacing: '0.3px',
-      marginLeft: '4px',
+      marginLeft: '0',
       marginRight: '4px',
       verticalAlign: 'middle',
       cursor: 'default',
-      userSelect: 'none'
+      userSelect: 'none',
+      backgroundColor: isPosted ? '#dcfce7' : '#fde8e8',
+      color: isPosted ? '#166534' : '#b91c1c',
+      border: isPosted ? '1px solid #bbf7d0' : '1px solid #f5c6c6'
     });
-    
-    // Insert the badge right after the red-pin image
-    img.parentNode.insertBefore(badge, img.nextSibling);
   });
 }
 
 function runBetterGrades() {
   if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
 
+  // Handle Post Grades page (staffPostGrades.do)
+  // This page may load as a popup window OR as an embedded dialog.
+  // The confirmation flow has two buttons:
+  //   1. A "Post" button that opens a confirmation prompt
+  //   2. A "Yes" button (id=msgbutton1) that actually submits the post
+  if (window.location.href.includes('staffPostGrades.do')) {
+    if (!window._btpPostConfirmListenerAttached) {
+      window._btpPostConfirmListenerAttached = true;
+
+      const markAsPosted = () => {
+        try {
+          // Try to resolve the section key from the opener's URL first,
+          // then fall back to the current page URL, then default.
+          let key = 'btp_grades_edited_default';
+          try {
+            if (window.opener) {
+              key = getStorageKey(window.opener.location.href);
+            } else {
+              key = getStorageKey();
+            }
+          } catch (_) {
+            key = getStorageKey();
+          }
+          localStorage.setItem(key, 'false');
+        } catch (err) {
+          console.error('Error setting edit state:', err);
+        }
+      };
+
+      const handlePostConfirm = (e) => {
+        let target = e.target;
+        while (target && target !== document) {
+          // Match the "Yes" confirmation button (id=msgbutton1)
+          if (target.id === 'msgbutton1') {
+            markAsPosted();
+            break;
+          }
+          // Also match a direct "Post" button
+          const isButton = target.tagName === 'BUTTON' || target.tagName === 'INPUT';
+          if (isButton) {
+            const btnText = (target.querySelector('.button-text') || target).textContent.trim();
+            if (btnText === 'Post' || btnText === 'Post Grades') {
+              // Don't mark as posted yet — the confirmation dialog will appear next.
+              // The actual post happens when "Yes" (msgbutton1) is clicked.
+            }
+          }
+          target = target.parentNode;
+        }
+      };
+      document.addEventListener('click', handlePostConfirm);
+    }
+    return;
+  }
+
   // Handle Gradebook Column Pins Replacement
   if (window.location.href.includes('staffGradeInput') || window.location.href.includes('gradebook')) {
-    replacePostedPins();
+    // Hide confusing override green dots via CSS injection
+    if (!document.getElementById('btp-hide-green-dots')) {
+      const style = document.createElement('style');
+      style.id = 'btp-hide-green-dots';
+      style.textContent = `
+        img[src*="exclamation-green"],
+        img[src*="exclamation_green"],
+        img[src*="greenDot"],
+        img[src*="green_dot"],
+        img[src*="green-dot"],
+        img[src*="bullet_green"],
+        img[src*="bullet-green"],
+        img[src*="override-green"],
+        img[src*="override_green"],
+        img[src*="override"],
+        img[src*="alert-green"] {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Clean up legacy click listener if it exists
+    if (window._btpPostGradesDelegatedListener) {
+      document.removeEventListener('click', window._btpPostGradesDelegatedListener);
+      delete window._btpPostGradesDelegatedListener;
+    }
+
+    // Attach edit listener if not already done
+    if (!window._btpGradebookEditListenerAttached) {
+      window._btpGradebookEditListenerAttached = true;
+
+      const handleEdit = (e) => {
+        const target = e.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) {
+          setGradesEdited(true);
+          replacePostedPins(true);
+        }
+      };
+      document.addEventListener('input', handleEdit);
+      document.addEventListener('change', handleEdit);
+    }
+
+    // Listen for localStorage changes from other windows (comment popup, Post Grades popup)
+    if (!window._btpStorageListenerAttached) {
+      window._btpStorageListenerAttached = true;
+      if (window._btpStorageListener) {
+        window.removeEventListener('storage', window._btpStorageListener);
+      }
+      const storageListener = (e) => {
+        if (!e.key || !e.key.startsWith('btp_grades_edited_')) return;
+        const edited = e.newValue === 'true';
+        window._btpGradesEdited = edited;
+        replacePostedPins(edited);
+      };
+      window.addEventListener('storage', storageListener);
+      window._btpStorageListener = storageListener;
+    }
+
+    replacePostedPins(getGradesEdited());
     const pinInterval = setInterval(() => {
       if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) {
         clearInterval(pinInterval);
         return;
       }
-      replacePostedPins();
+      replacePostedPins(getGradesEdited());
     }, 1000);
     
     if (window._btpPinInterval) clearInterval(window._btpPinInterval);
@@ -1003,6 +1190,16 @@ function resizePopupToFit() {
         });
       } else {
         maxBottom = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      }
+
+      // Account for the save-next hint if present
+      const hint = document.getElementById('btp-save-next-hint');
+      if (hint) {
+        const hintRect = hint.getBoundingClientRect();
+        const hintAbsBottom = hintRect.bottom + window.scrollY;
+        if (hintAbsBottom > maxBottom) {
+          maxBottom = hintAbsBottom;
+        }
       }
 
       // Add a safety padding of 30px
@@ -1263,6 +1460,11 @@ function injectBetterGradesUI(textArea, stdId) {
           updateUI('posted');
         }
         adjustLayout();
+
+        // Auto-focus the textarea and place cursor at the end
+        textArea.focus();
+        const len = textArea.value.length;
+        textArea.setSelectionRange(len, len);
       });
     });
   }
@@ -1271,6 +1473,19 @@ function injectBetterGradesUI(textArea, stdId) {
   // Only attach listeners once per textArea element
   if (textArea._btpGradesListenersAttached) return;
   textArea._btpGradesListenersAttached = true;
+
+  // Add keyboard shortcut for Save and Go to Next (Ctrl+Enter / Cmd+Enter)
+  textArea.addEventListener('keydown', (e) => {
+    if (!isContextValid() || window._betterTeacherPortalLastScriptId !== currentScriptId) return;
+
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.keyCode === 13)) {
+      const saveAndNextBtn = document.getElementById('saveAndNextButton');
+      if (saveAndNextBtn) {
+        e.preventDefault();
+        saveAndNextBtn.click();
+      }
+    }
+  });
 
   let timeoutId = null;
   textArea.addEventListener('input', () => {
@@ -1300,7 +1515,61 @@ function injectBetterGradesUI(textArea, stdId) {
 
   ['saveButton', 'saveAndPreviousButton', 'saveAndNextButton', 'cancelButton'].forEach(id => {
     const btn = document.getElementById(id);
-    if (btn) btn.addEventListener('click', clearStorage);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (id !== 'cancelButton') {
+          // Signal the gradebook page that grades are now "Not Posted" (comment was saved)
+          try {
+            let key = 'btp_grades_edited_default';
+            try {
+              if (window.opener) {
+                key = getStorageKey(window.opener.location.href);
+              }
+            } catch (_) {}
+            localStorage.setItem(key, 'true');
+          } catch (err) {
+            console.error('Error setting edit state:', err);
+          }
+        }
+        clearStorage();
+      });
+      if (id === 'saveAndNextButton') {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const shortcutText = isMac ? 'CMD + Return' : 'CTRL + Enter';
+        btn.title = `Save and go to next record (${shortcutText})`;
+
+        // Insert shortcut hint directly underneath the button using an inline-block span wrapper
+        let wrapper = btn.parentNode;
+        if (!wrapper.classList.contains('btp-btn-wrapper')) {
+          wrapper = document.createElement('span');
+          wrapper.className = 'btp-btn-wrapper';
+          Object.assign(wrapper.style, {
+            display: 'inline-block',
+            position: 'relative'
+          });
+          btn.parentNode.insertBefore(wrapper, btn);
+          wrapper.appendChild(btn);
+        }
+
+        const hint = document.createElement('span');
+        hint.id = 'btp-save-next-hint';
+        hint.className = 'btp-grades-ui';
+        hint.textContent = shortcutText;
+        Object.assign(hint.style, {
+          position: 'absolute',
+          top: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          fontSize: '11px',
+          color: '#475569',
+          marginTop: '4px',
+          fontWeight: '600',
+          fontFamily: '"Inter", -apple-system, sans-serif'
+        });
+        wrapper.appendChild(hint);
+      }
+    }
   });
 }
 
